@@ -1,0 +1,7 @@
+[package]
+name = "go-wire"
+version = "0.1.0"
+authors = ["zaki"]
+
+[dependencies]
+go-wire-derive = { path = "go-wire-derive" }
