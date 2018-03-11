@@ -1,5 +1,5 @@
 [package]
-name = "go-wire-derive"
+name = "amino-derive"
 version = "0.1.0"
 authors = ["zaki"]
 

@@ -3,10 +3,9 @@ extern crate go_wire_derive;
 
 
 
+
 #[cfg(test)]
 mod tests {
-
-
     #[derive(Wire)]
     struct Foo(i32);
 

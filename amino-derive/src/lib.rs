@@ -41,13 +41,38 @@ fn compute_disfix(identity: &str)->(Vec<u8>, Vec<u8>) {
 fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
     let input: DeriveInput = syn::parse(input)?;
     let (dis_bytes,pre_bytes) = compute_disfix(input.ident.as_ref());
-    println!("Disfix Bytes {:?}",String::from_utf8((dis_bytes)));
-    println!("Prefix Bytes {:?}",String::from_utf8((pre_bytes)));
+    
+    if !input.generics.params.is_empty() ||
+       input.generics.where_clause.is_some() {
+        bail!("Message may not be derived for generic type");
+    }
 
-    unimplemented!();
+    let variant_data = match input.data {
+        Data::Struct(variant_data) => variant_data,
+        Data::Enum(..) => bail!("Message can not be derived for an enum"),
+        Data::Union(..) => bail!("Message can not be derived for a union"),
+    };
+
+    let fields = match variant_data {
+        DataStruct { fields: Fields::Named(FieldsNamed { named: fields, .. }), .. } |
+        DataStruct { fields: Fields::Unnamed(FieldsUnnamed { unnamed: fields, .. }), ..} => {
+            fields.into_iter().collect()
+        },
+        DataStruct { fields: Fields::Unit, .. } => Vec::new(),
+    };
+
+    let module = Ident::from(format!("{}_WIRE", input.ident));
+
+    let expanded = quote! {
+        #[allow(non_snake_case, unused_attributes)]
+        mod #module {
+            
+        };
+    };
+    Ok(expanded.into())
 }
 
-#[proc_macro_derive(Wire, attributes(prost))]
+#[proc_macro_derive(Wire)]
 pub fn message(input: TokenStream) -> TokenStream {
     try_message(input).unwrap()
 }
