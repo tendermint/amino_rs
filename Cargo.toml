@@ -3,5 +3,9 @@ name = "amino"
 version = "0.1.0"
 authors = ["zaki"]
 
+
+
 [dependencies]
-go-wire-derive = { path = "go-wire-derive" }
+amino-derive = { path = "amino-derive" }
+byteorder = "1"
+bytes = "0.4"

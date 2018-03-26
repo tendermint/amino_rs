@@ -1,8 +1,11 @@
 #[macro_use]
-extern crate go_wire_derive;
+extern crate amino_derive;
+extern crate bytes;
 
+mod encoding;
+mod error;
 
-
+pub use error::{DecodeError, EncodeError};
 
 #[cfg(test)]
 mod tests {
