@@ -6,6 +6,69 @@ use bytes::{
 use std::cmp::min;  
 use DecodeError;
 
+#[derive(PartialEq)]
+enum Typ3Byte{
+    // Typ3 types
+	Typ3_Varint,
+	Typ3_8Byte, 
+	Typ3_ByteLength, 
+	Typ3_Struct,
+	Typ3_StructTerm, 
+	Typ3_4Byte,
+	Typ3_List,
+	Typ3_Interface,
+	// Typ4 bit
+	Typ4_Pointer,
+    Invalid
+}
+
+fn typ3_to_byte(typ3: Typ3Byte)->u8{
+    match typ3{
+    // Typ3 types
+	Typ3Byte::Typ3_Varint => 0,
+	Typ3Byte::Typ3_8Byte => 1, 
+	Typ3Byte::Typ3_ByteLength => 2, 
+	Typ3Byte::Typ3_Struct => 3,
+	Typ3Byte::Typ3_StructTerm => 4, 
+	Typ3Byte::Typ3_4Byte => 5, 
+	Typ3Byte::Typ3_List => 6,
+	Typ3Byte::Typ3_Interface => 7,
+	// Typ4 bit
+	Typ3Byte::Typ4_Pointer => 8,
+    Typ3Byte::Invalid => panic!("Should not use an invalid Typ3")
+    }
+}
+
+fn byte_to_type3(data: u8)->Typ3Byte{
+    match data{
+        0 => Typ3Byte::Typ3_Varint,
+        1 => Typ3Byte::Typ3_8Byte,
+        2 => Typ3Byte::Typ3_ByteLength,
+        3 => Typ3Byte::Typ3_Struct,
+        4 => Typ3Byte::Typ3_StructTerm,
+        5 => Typ3Byte::Typ3_4Byte,
+        6 => Typ3Byte::Typ3_List,
+        7 => Typ3Byte::Typ3_Interface,
+        8 => Typ3Byte::Typ4_Pointer,
+        _ => Typ3Byte::Invalid
+    }
+} 
+
+fn encode_field_number_typ3<B>(field_number: u32, typ:Typ3Byte, buf: &mut B) where B:BufMut{
+	// Pack Typ3 and field number.
+	let value = ((field_number as u8) << 3) | typ3_to_byte(typ);
+    buf.put_u8(value);
+}
+
+fn decode_field_number_typ3<B>( buf: &mut B) ->Result<(u32,Typ3Byte),DecodeError> where B:Buf{
+    let value = decode_varint(buf)?;
+    let typ3 = byte_to_type3(value as u8 & 0x07);
+    let field_number = value >>3;
+    return Ok((field_number as u32, typ3))
+}
+
+
+
 /// Encodes an integer value into LEB128 variable length format, and writes it to the buffer.
 /// The buffer must have enough remaining space (maximum 10 bytes).
 #[inline]
@@ -119,4 +182,45 @@ pub mod bytes {
              }
              Ok(dst)
         }
+}
+
+pub mod time {
+    use super::*;
+    use chrono::{DateTime,NaiveDateTime, Utc};
+    pub fn encode<B>(value: DateTime<Utc>, buf: &mut B) where B: BufMut{
+        let mut epoch = value.timestamp() as u64;
+        let nanos = value.timestamp_subsec_nanos() as u64;
+        encode_field_number_typ3(1,Typ3Byte::Typ3_8Byte, buf);
+        encode_varint(epoch, buf);
+        encode_field_number_typ3(2, Typ3Byte::Typ3_4Byte, buf);
+        encode_varint(nanos, buf);
+        buf.put_u8(0x04)
+
+    }
+    pub fn decode<B>(buf: &mut B)-> Result<DateTime<Utc>,DecodeError> where B:Buf{
+
+     {
+        let (field_number, typ3) = decode_field_number_typ3(buf)?;
+        if field_number != 1{
+            return Err(DecodeError::new("Field number in time struct is not 1"))
+        }
+        if typ3 != Typ3Byte::Typ3_8Byte{
+            return Err(DecodeError::new("Invalid Typ3 bytes"))
+        }
+    }
+        let epoch = decode_varint(buf)? as i64;
+
+     {
+        let (field_number, typ3) = decode_field_number_typ3(buf)?;
+        if field_number != 2{
+            return Err(DecodeError::new("Field number in time struct is not 2"))
+        }
+        if typ3 != Typ3Byte::Typ3_4Byte{
+            return Err(DecodeError::new("Invalid Typ3 bytes"))
+        }
+     }
+        let nanos = decode_varint(buf)? as u32;
+
+        Ok(DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(epoch,nanos),Utc))
+    }
 }

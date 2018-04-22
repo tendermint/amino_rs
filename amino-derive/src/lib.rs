@@ -60,6 +60,8 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
         },
         DataStruct { fields: Fields::Unit, .. } => Vec::new(),
     };
+    print!("{} \n",input.ident);
+    print!("{:?} \n",fields);
 
     let module = Ident::from(format!("{}_WIRE", input.ident));
 
