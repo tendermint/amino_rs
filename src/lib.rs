@@ -7,6 +7,12 @@ mod error;
 
 pub use error::{DecodeError, EncodeError};
 pub use encoding::*;
+
+pub trait Amino{
+    fn serialize(self)->Vec<u8>;
+    fn deserialize(self, Vec<u8>);
+}
+
 // #[cfg(test)]
 // mod tests {
 //     #[derive(Wire)]
