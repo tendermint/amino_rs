@@ -6,8 +6,10 @@ use bytes::{
 use std::cmp::min;  
 use DecodeError;
 
+use sha2::{Sha256, Digest};
+
 #[derive(PartialEq)]
-enum Typ3Byte{
+pub enum Typ3Byte{
     // Typ3 types
 	Typ3_Varint,
 	Typ3_8Byte, 
@@ -54,17 +56,27 @@ fn byte_to_type3(data: u8)->Typ3Byte{
     }
 } 
 
-fn encode_field_number_typ3<B>(field_number: u32, typ:Typ3Byte, buf: &mut B) where B:BufMut{
+pub fn encode_field_number_typ3<B>(field_number: u32, typ:Typ3Byte, buf: &mut B) where B:BufMut{
 	// Pack Typ3 and field number.
 	let value = ((field_number as u8) << 3) | typ3_to_byte(typ);
     buf.put_u8(value);
 }
 
-fn decode_field_number_typ3<B>( buf: &mut B) ->Result<(u32,Typ3Byte),DecodeError> where B:Buf{
+pub fn decode_field_number_typ3<B>( buf: &mut B) ->Result<(u32,Typ3Byte),DecodeError> where B:Buf{
     let value = decode_varint(buf)?;
     let typ3 = byte_to_type3(value as u8 & 0x07);
     let field_number = value >>3;
     return Ok((field_number as u32, typ3))
+}
+
+pub fn compute_disfix(identity: &str)->(Vec<u8>, Vec<u8>) {
+    let mut sh = Sha256::default();
+    sh.input(identity.as_bytes());
+    let output =  sh.result();
+    let disamb_bytes = output.iter().filter(|&x| *x!= 0x00).cloned().take(3).collect();
+    let mut prefix_bytes:Vec<u8> = output.iter().filter(|&x| *x!= 0x00).skip(3).filter(|&x| *x!= 0x00).cloned().take(4).collect();
+    prefix_bytes[3] &= 0xF8;
+    return (disamb_bytes,prefix_bytes);
 }
 
 
