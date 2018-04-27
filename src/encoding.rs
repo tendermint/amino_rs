@@ -1,7 +1,8 @@
 use bytes::{
     Buf,
     BufMut,
-    LittleEndian,
+    BigEndian,
+    ByteOrder
 };
 use std::cmp::min;  
 use DecodeError;
@@ -171,6 +172,27 @@ fn decode_varint_slow<B>(buf: &mut B) -> Result<u64, DecodeError> where B: Buf {
 
     Err(DecodeError::new("invalid varint"))
 }
+
+pub fn encode_int8<B>(num:u8, buf:&mut B) where B:BufMut{
+    encode_varint(num as u64, buf)
+}
+
+pub fn encode_int16<B>(num:u16, buf:&mut B) where B:BufMut{
+    encode_varint(num as u64, buf)
+}
+pub fn encode_int32<B>(num:u32, buf:&mut B) where B:BufMut{
+    let mut data =[0; 4];
+    BigEndian::write_u32(&mut data, num);
+    buf.put_slice(&data);
+}
+pub fn encode_int64<B>(num:u64, buf:&mut B) where B:BufMut{
+    let mut data =[0; 8];
+    BigEndian::write_u64(&mut data, num);
+    buf.put_slice(&data);
+}
+
+
+
 
 pub mod amino_string {
     use super::*;
