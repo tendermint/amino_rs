@@ -175,7 +175,7 @@ fn decode_varint_slow<B>(buf: &mut B) -> Result<u64, DecodeError> where B: Buf {
 pub mod string {
     use super::*;
 
-    pub fn encode<B>(value: &String,
+    pub fn encode<B>(value: &str,
                      buf: &mut B) where B: BufMut {
         encode_varint(value.len() as u64, buf);
         buf.put_slice(value.as_bytes());
@@ -196,7 +196,7 @@ pub mod string {
 
 pub mod bytes {
     use super::*;
-    pub fn encode<B>(value: &Vec<u8>, buf: &mut B) where B: BufMut {
+    pub fn encode<B>(value: &[u8], buf: &mut B) where B: BufMut {
         encode_varint(value.len() as u64, buf);
         buf.put_slice(value);
     }
