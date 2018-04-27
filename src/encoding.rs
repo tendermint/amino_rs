@@ -95,12 +95,18 @@ mod disfix_tests {
     }
 }
 
-
+pub fn encode_varint<B>(mut value: i64, buf: &mut B) where B: BufMut {
+    let mut ux = (value as u64) << 1;
+    if value < 0 {
+        ux = !ux;
+    }
+    encode_uvarint(ux, buf)
+}
 
 /// Encodes an integer value into LEB128 variable length format, and writes it to the buffer.
 /// The buffer must have enough remaining space (maximum 10 bytes).
 #[inline]
-pub fn encode_varint<B>(mut value: u64, buf: &mut B) where B: BufMut {
+pub fn encode_uvarint<B>(mut value: u64, buf: &mut B) where B: BufMut {
     // Safety notes:
     //
     // - bytes_mut is unsafe because it may return an uninitialized slice.
@@ -174,11 +180,11 @@ fn decode_varint_slow<B>(buf: &mut B) -> Result<u64, DecodeError> where B: Buf {
 }
 
 pub fn encode_int8<B>(num:u8, buf:&mut B) where B:BufMut{
-    encode_varint(num as u64, buf)
+    encode_varint(num as i64, buf)
 }
 
 pub fn encode_int16<B>(num:u16, buf:&mut B) where B:BufMut{
-    encode_varint(num as u64, buf)
+    encode_varint(num as i64, buf)
 }
 pub fn encode_int32<B>(num:u32, buf:&mut B) where B:BufMut{
     let mut data =[0; 4];
@@ -199,7 +205,7 @@ pub mod amino_string {
 
     pub fn encode<B>(value: &str,
                      buf: &mut B) where B: BufMut {
-        encode_varint(value.len() as u64, buf);
+        encode_varint(value.len() as i64, buf);
         buf.put_slice(value.as_bytes());
     }
 
@@ -219,7 +225,7 @@ pub mod amino_string {
 pub mod amino_bytes {
     use super::*;
     pub fn encode<B>(value: &[u8], buf: &mut B) where B: BufMut {
-        encode_varint(value.len() as u64, buf);
+        encode_varint(value.len() as i64, buf);
         buf.put_slice(value);
     }
     pub fn decode<B>(buf: &mut B)->Result<Vec<u8>,DecodeError> where B: Buf {
@@ -240,9 +246,9 @@ pub mod amino_time {
         let mut epoch = value.timestamp() as u64;
         let nanos = value.timestamp_subsec_nanos() as u64;
         encode_field_number_typ3(1,Typ3Byte::Typ3_8Byte, buf);
-        encode_varint(epoch, buf);
+        encode_uvarint(epoch, buf);
         encode_field_number_typ3(2, Typ3Byte::Typ3_4Byte, buf);
-        encode_varint(nanos, buf);
+        encode_uvarint(nanos, buf);
         buf.put_u8(0x04)
 
     }
