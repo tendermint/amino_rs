@@ -172,7 +172,7 @@ fn decode_varint_slow<B>(buf: &mut B) -> Result<u64, DecodeError> where B: Buf {
     Err(DecodeError::new("invalid varint"))
 }
 
-pub mod string {
+pub mod amino_string {
     use super::*;
 
     pub fn encode<B>(value: &str,
@@ -211,7 +211,7 @@ pub mod amino_bytes {
         }
 }
 
-pub mod time {
+pub mod amino_time {
     use super::*;
     use chrono::{DateTime,NaiveDateTime, Utc};
     pub fn encode<B>(value: DateTime<Utc>, buf: &mut B) where B: BufMut{
