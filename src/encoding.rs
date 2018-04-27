@@ -73,10 +73,27 @@ pub fn compute_disfix(identity: &str)->(Vec<u8>, Vec<u8>) {
     let mut sh = Sha256::default();
     sh.input(identity.as_bytes());
     let output =  sh.result();
-    let disamb_bytes = output.iter().filter(|&x| *x!= 0x00).cloned().take(3).collect();
-    let mut prefix_bytes:Vec<u8> = output.iter().filter(|&x| *x!= 0x00).skip(3).filter(|&x| *x!= 0x00).cloned().take(4).collect();
+    let disamb_bytes = output.iter().skip_while(|&x| *x== 0x00).cloned().take(3).collect();
+    let mut prefix_bytes:Vec<u8> = output.iter().skip_while (|&x| *x== 0x00).skip(3).skip_while(|&x| *x== 0x00).cloned().take(4).collect();
     prefix_bytes[3] &= 0xF8;
     return (disamb_bytes,prefix_bytes);
+}
+
+#[cfg(test)]
+mod disfix_tests {
+    use super::*;
+    #[test]
+    fn check_examples() {
+        let want_disfix = vec![0x9f, 0x86, 0xd0];
+        let want_prefix = vec![0x81, 0x88, 0x4c, 0x78];
+
+        let (disfix , prefix) = compute_disfix("test");
+        println!("disfix {:02x?}", disfix.as_slice());
+        println!("prefix {:02x?}", prefix.as_slice());
+
+        assert_eq!(want_disfix, disfix);
+        assert_eq!(want_prefix, prefix);
+    }
 }
 
 
