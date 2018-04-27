@@ -24,7 +24,7 @@ pub enum Typ3Byte{
     Invalid
 }
 
-fn typ3_to_byte(typ3: Typ3Byte)->u8{
+pub fn typ3_to_byte(typ3: Typ3Byte)->u8{
     match typ3{
     // Typ3 types
 	Typ3Byte::Typ3_Varint => 0,
@@ -41,7 +41,7 @@ fn typ3_to_byte(typ3: Typ3Byte)->u8{
     }
 }
 
-fn byte_to_type3(data: u8)->Typ3Byte{
+pub fn byte_to_type3(data: u8)->Typ3Byte{
     match data{
         0 => Typ3Byte::Typ3_Varint,
         1 => Typ3Byte::Typ3_8Byte,
@@ -87,9 +87,7 @@ mod disfix_tests {
         let want_disfix = vec![0x9f, 0x86, 0xd0];
         let want_prefix = vec![0x81, 0x88, 0x4c, 0x78];
 
-        let (disfix , prefix) = compute_disfix("test");
-        println!("disfix {:02x?}", disfix.as_slice());
-        println!("prefix {:02x?}", prefix.as_slice());
+        let (disfix , prefix) = compute_disfix("test"); 
 
         assert_eq!(want_disfix, disfix);
         assert_eq!(want_prefix, prefix);
