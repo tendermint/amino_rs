@@ -225,7 +225,7 @@ pub mod amino_string {
 pub mod amino_bytes {
     use super::*;
     pub fn encode<B>(value: &[u8], buf: &mut B) where B: BufMut {
-        encode_varint(value.len() as i64, buf);
+        encode_uvarint(value.len() as u64, buf);
         buf.put_slice(value);
     }
     pub fn decode<B>(buf: &mut B)->Result<Vec<u8>,DecodeError> where B: Buf {
