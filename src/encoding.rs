@@ -194,7 +194,7 @@ pub mod string {
         }
 }
 
-pub mod bytes {
+pub mod amino_bytes {
     use super::*;
     pub fn encode<B>(value: &[u8], buf: &mut B) where B: BufMut {
         encode_varint(value.len() as u64, buf);
