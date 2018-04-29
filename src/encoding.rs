@@ -1,8 +1,7 @@
 use bytes::{
     Buf,
     BufMut,
-    BigEndian,
-    ByteOrder
+    BigEndian
 };
 use std::cmp::min;  
 use DecodeError;
@@ -64,7 +63,7 @@ pub fn encode_field_number_typ3<B>(field_number: u32, typ:Typ3Byte, buf: &mut B)
 }
 
 pub fn decode_field_number_typ3<B>( buf: &mut B) ->Result<(u32,Typ3Byte),DecodeError> where B:Buf{
-    let value = decode_varint(buf)?;
+    let value = decode_uvarint(buf)?;
     let typ3 = byte_to_type3(value as u8 & 0x07);
     let field_number = value >>3;
     return Ok((field_number as u32, typ3))
@@ -137,8 +136,17 @@ pub fn encode_uvarint<B>(mut value: u64, buf: &mut B) where B: BufMut {
     unsafe { buf.advance_mut(i); }
 }
 
+pub fn decode_varint<B>(buf: &mut B) -> Result<i64, DecodeError> where B: Buf {
+    let val = decode_uvarint(buf)?;
+    let mut x = (val >> 1) as i64;
+    if x & 1 != 0{
+        x = !x;
+    }
+    Ok(x)
+}
+
 /// Decodes a LEB128-encoded variable length integer from the buffer.
-pub fn decode_varint<B>(buf: &mut B) -> Result<u64, DecodeError> where B: Buf {
+pub fn decode_uvarint<B>(buf: &mut B) -> Result<u64, DecodeError> where B: Buf {
     // NLL hack.
     'slow: loop {
         // Another NLL hack.
@@ -160,13 +168,13 @@ pub fn decode_varint<B>(buf: &mut B) -> Result<u64, DecodeError> where B: Buf {
         buf.advance(advance);
         return Ok(value);
     }
-    decode_varint_slow(buf)
+    decode_uvarint_slow(buf)
 }
 
 /// Decodes a LEB128-encoded variable length integer from the buffer, advancing the buffer as
 /// necessary.
 #[inline(never)]
-fn decode_varint_slow<B>(buf: &mut B) -> Result<u64, DecodeError> where B: Buf {
+fn decode_uvarint_slow<B>(buf: &mut B) -> Result<u64, DecodeError> where B: Buf {
     let mut value = 0;
     for count in 0..min(10, buf.remaining()) {
         let byte = buf.get_u8();
@@ -187,17 +195,32 @@ pub fn encode_int16<B>(num:i16, buf:&mut B) where B:BufMut{
     encode_varint(num as i64, buf)
 }
 pub fn encode_int32<B>(num:i32, buf:&mut B) where B:BufMut{
-    let mut data =[0; 4];
-    BigEndian::write_u32(&mut data, (num << 1) as u32);
-    buf.put_slice(&data);
+    buf.put_u32::<BigEndian>((num << 1) as u32);
 }
 pub fn encode_int64<B>(num:i64, buf:&mut B) where B:BufMut{
-    let mut data =[0; 8];
-    BigEndian::write_u64(&mut data, (num << 1) as u64);
-    buf.put_slice(&data);
+    buf.put_u64::<BigEndian>((num << 1) as u64);
 }
 
 
+pub fn decode_int8<B>(buf: &mut B)-> Result<i8, DecodeError> where B: Buf {  
+    Ok(decode_varint(buf)? as i8)
+}
+
+pub fn decode_int16<B>(buf: &mut B)-> Result<i16, DecodeError> where B: Buf {  
+    Ok(decode_varint(buf)? as i16)
+}
+
+pub fn decode_int32<B>(buf: &mut B)-> Result<i32, DecodeError> where B: Buf {
+
+    let x = B::get_u32::<BigEndian>(buf);   
+    Ok((x >>1) as i32)
+}
+
+pub fn decode_in64<B>(buf: &mut B)-> Result<i64, DecodeError> where B: Buf {
+
+    let x = B::get_u64::<BigEndian>(buf);   
+    Ok((x >>1) as i64)
+}
 
 
 pub mod amino_string {
@@ -210,7 +233,7 @@ pub mod amino_string {
     }
 
     pub fn decode<B>(buf: &mut B)->Result<String,DecodeError> where B: Buf {
-             let len = decode_varint(buf)?;
+             let len = decode_uvarint(buf)?;
              let mut dst = vec![];
              dst.put(buf.take(len as usize).into_inner());
              if dst.len() != len as usize{
@@ -229,7 +252,7 @@ pub mod amino_bytes {
         buf.put_slice(value);
     }
     pub fn decode<B>(buf: &mut B)->Result<Vec<u8>,DecodeError> where B: Buf {
-             let len = decode_varint(buf)?;
+             let len = decode_uvarint(buf)?;
              let mut dst = vec![];
              dst.put(buf.take(len as usize).into_inner());
              if dst.len() != len as usize{
@@ -263,7 +286,7 @@ pub mod amino_time {
             return Err(DecodeError::new("Invalid Typ3 bytes"))
         }
     }
-        let epoch = decode_varint(buf)? as i64;
+        let epoch = decode_uvarint(buf)? as i64;
 
      {
         let (field_number, typ3) = decode_field_number_typ3(buf)?;
@@ -274,7 +297,7 @@ pub mod amino_time {
             return Err(DecodeError::new("Invalid Typ3 bytes"))
         }
      }
-        let nanos = decode_varint(buf)? as u32;
+        let nanos = decode_uvarint(buf)? as u32;
 
         Ok(DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(epoch,nanos),Utc))
     }
