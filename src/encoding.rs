@@ -193,7 +193,7 @@ pub fn encode_int32<B>(num:u32, buf:&mut B) where B:BufMut{
 }
 pub fn encode_int64<B>(num:i64, buf:&mut B) where B:BufMut{
     let mut data =[0; 8];
-    BigEndian::write_u64(&mut data, num as u64);
+    BigEndian::write_u64(&mut data, (num << 1) as u64);
     buf.put_slice(&data);
 }
 
