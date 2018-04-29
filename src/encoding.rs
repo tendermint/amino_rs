@@ -95,7 +95,7 @@ mod disfix_tests {
     }
 }
 
-pub fn encode_varint<B>(mut value: i64, buf: &mut B) where B: BufMut {
+pub fn encode_varint<B>(value: i64, buf: &mut B) where B: BufMut {
     let mut ux = (value as u64) << 1;
     if value < 0 {
         ux = !ux;
@@ -191,9 +191,9 @@ pub fn encode_int32<B>(num:u32, buf:&mut B) where B:BufMut{
     BigEndian::write_u32(&mut data, num);
     buf.put_slice(&data);
 }
-pub fn encode_int64<B>(num:u64, buf:&mut B) where B:BufMut{
+pub fn encode_int64<B>(num:i64, buf:&mut B) where B:BufMut{
     let mut data =[0; 8];
-    BigEndian::write_u64(&mut data, num);
+    BigEndian::write_u64(&mut data, num as u64);
     buf.put_slice(&data);
 }
 
