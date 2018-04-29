@@ -11,7 +11,6 @@ pub use encoding::*;
 
 pub trait Amino{
     fn serialize(self)->Vec<u8>;
-    fn deserialize(self, &[u8]);
 }
 
 // #[cfg(test)]
