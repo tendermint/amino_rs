@@ -228,7 +228,7 @@ pub mod amino_string {
 
     pub fn encode<B>(value: &str,
                      buf: &mut B) where B: BufMut {
-        encode_uvarint(value.len() as i64, buf);
+        encode_uvarint(value.len() as u64, buf);
         buf.put_slice(value.as_bytes());
     }
 
