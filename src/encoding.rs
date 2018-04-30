@@ -235,9 +235,10 @@ pub mod amino_string {
     pub fn decode<B>(buf: &mut B)->Result<String,DecodeError> where B: Buf {
              let len = decode_uvarint(buf)?;
              let mut dst = vec![];
-             dst.put(buf.take(len as usize).into_inner());
+             dst.resize(len as usize,0);
+             buf.copy_to_slice(&mut dst);
              if dst.len() != len as usize{
-                  Err(DecodeError::new("invalid string length"))?
+                 Err(DecodeError::new(format!("invalid string length have {} want {}",len as usize, dst.len())))?
              }
              Ok(String::from_utf8(dst).map_err(|_| {
                 DecodeError::new("invalid string value: data is not UTF-8 encoded")
@@ -253,10 +254,11 @@ pub mod amino_bytes {
     }
     pub fn decode<B>(buf: &mut B)->Result<Vec<u8>,DecodeError> where B: Buf {
              let len = decode_uvarint(buf)?;
-             let mut dst = vec![];
-             dst.put(buf.take(len as usize).into_inner());
+             let mut dst = vec!();
+             dst.resize(len as usize,0);
+             buf.copy_to_slice(&mut dst);
              if dst.len() != len as usize{
-                 Err(DecodeError::new( format!("invalid byte length have {} want {}",len, dst.len())))?
+                 Err(DecodeError::new( format!("invalid byte length have {} want {}",len as usize, dst.len())))?
              }
              Ok(dst)
         }
