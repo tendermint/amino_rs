@@ -139,7 +139,7 @@ pub fn encode_uvarint<B>(mut value: u64, buf: &mut B) where B: BufMut {
 pub fn decode_varint<B>(buf: &mut B) -> Result<i64, DecodeError> where B: Buf {
     let val = decode_uvarint(buf)?;
     let mut x = (val >> 1) as i64;
-    if x & 1 != 0{
+    if x & 0x01 != 0{
         x = !x;
     }
     Ok(x)
