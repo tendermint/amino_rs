@@ -140,7 +140,7 @@ pub fn decode_varint<B>(buf: &mut B) -> Result<i64, DecodeError> where B: Buf {
     let val = decode_uvarint(buf)?;
     let mut x = val >> 1 ;
     if x & 1_u64 != 0{
-        return Ok(!(x as i64))
+        return Ok(!x as i64)
     }
     Ok(x as i64 )
 }
