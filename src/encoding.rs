@@ -256,7 +256,7 @@ pub mod amino_bytes {
              let mut dst = vec![];
              dst.put(buf.take(len as usize).into_inner());
              if dst.len() != len as usize{
-                 Err(DecodeError::new("invalid byte length"))?
+                 Err(DecodeError::new( format!("invalid byte length have {} want {}",len, dst.len())))?
              }
              Ok(dst)
         }
