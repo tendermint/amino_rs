@@ -138,11 +138,11 @@ pub fn encode_uvarint<B>(mut value: u64, buf: &mut B) where B: BufMut {
 
 pub fn decode_varint<B>(buf: &mut B) -> Result<i64, DecodeError> where B: Buf {
     let val = decode_uvarint(buf)?;
-    let mut x = val >> 1 ;
-    if x & 1_u64 != 0{
-        return Ok(!x as i64)
+    let x = (val >> 1) as i64;
+    if val & 1_u64 != 0{
+        return Ok(!x)
     }
-    Ok(x as i64 )
+    Ok(x)
 }
 
 /// Decodes a LEB128-encoded variable length integer from the buffer.
