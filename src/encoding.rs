@@ -216,7 +216,7 @@ pub fn decode_int32<B>(buf: &mut B)-> Result<i32, DecodeError> where B: Buf {
     Ok((x >>1) as i32)
 }
 
-pub fn decode_in64<B>(buf: &mut B)-> Result<i64, DecodeError> where B: Buf {
+pub fn decode_int64<B>(buf: &mut B)-> Result<i64, DecodeError> where B: Buf {
 
     let x = B::get_u64::<BigEndian>(buf);   
     Ok((x >>1) as i64)
