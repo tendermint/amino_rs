@@ -9,9 +9,9 @@ mod error;
 pub use error::{DecodeError, EncodeError};
 pub use encoding::*;
 
-pub trait Amino{
+pub trait Amino:Sized{
     fn serialize(self)->Vec<u8>;
-    fn deserialize(Vec<u8>)->Self;
+    fn deserialize(&[u8])->Result<Self, DecodeError>;
 }
 
 // #[cfg(test)]
