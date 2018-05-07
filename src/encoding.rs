@@ -5,6 +5,7 @@ use bytes::{
 };
 use std::cmp::min;  
 use DecodeError;
+use std::io::Cursor;
 
 use sha2::{Sha256, Digest};
 
@@ -302,5 +303,25 @@ pub mod amino_time {
         let nanos = decode_uvarint(buf)? as u32;
 
         Ok(DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(epoch,nanos),Utc))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn check_encdec_neg_int32() {
+        let want = -1;
+        let mut buf = Vec::with_capacity(100 * 100000);
+        encode_int32(want, &mut buf);
+        let mut buf = Cursor::new(buf);
+        let got_res = decode_int32(&mut buf);
+
+        match got_res {
+            Ok(got) => assert_eq!(got, want),
+            Err(e) => panic!("Couldn't decode int32"),
+        }
+
     }
 }
