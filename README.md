@@ -1,4 +1,4 @@
-#Rust Amino
+# Rust Amino
 
 Rust implementation of the Amino encoding standard.
 
