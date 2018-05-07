@@ -213,7 +213,7 @@ pub fn decode_int16<B>(buf: &mut B)-> Result<i16, DecodeError> where B: Buf {
 
 pub fn decode_int32<B>(buf: &mut B)-> Result<i32, DecodeError> where B: Buf {
 
-    let x = B::get_u32::<BigEndian>(buf);   
+    let x = B::get_i32::<BigEndian>(buf);
     Ok((x >>1) as i32)
 }
 
