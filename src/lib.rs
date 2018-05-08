@@ -1,4 +1,3 @@
-#[macro_use]
 extern crate bytes;
 extern crate chrono;
 extern crate sha2;

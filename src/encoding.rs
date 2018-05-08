@@ -5,6 +5,7 @@ use bytes::{
 };
 use std::cmp::min;  
 use DecodeError;
+use std::io::Cursor;
 
 use sha2::{Sha256, Digest};
 
@@ -195,10 +196,10 @@ pub fn encode_int16<B>(num:i16, buf:&mut B) where B:BufMut{
     encode_varint(num as i64, buf)
 }
 pub fn encode_int32<B>(num:i32, buf:&mut B) where B:BufMut{
-    buf.put_u32::<BigEndian>((num << 1) as u32);
+    buf.put_u32::<BigEndian>(num  as u32);
 }
 pub fn encode_int64<B>(num:i64, buf:&mut B) where B:BufMut{
-    buf.put_u64::<BigEndian>((num << 1) as u64);
+    buf.put_u64::<BigEndian>(num as u64);
 }
 
 
@@ -212,14 +213,14 @@ pub fn decode_int16<B>(buf: &mut B)-> Result<i16, DecodeError> where B: Buf {
 
 pub fn decode_int32<B>(buf: &mut B)-> Result<i32, DecodeError> where B: Buf {
 
-    let x = B::get_u32::<BigEndian>(buf);   
-    Ok((x >>1) as i32)
+    let x = B::get_u32::<BigEndian>(buf);
+    Ok(x as i32)
 }
 
 pub fn decode_int64<B>(buf: &mut B)-> Result<i64, DecodeError> where B: Buf {
 
     let x = B::get_u64::<BigEndian>(buf);   
-    Ok((x >>1) as i64)
+    Ok(x as i64)
 }
 
 
@@ -302,5 +303,38 @@ pub mod amino_time {
         let nanos = decode_uvarint(buf)? as u32;
 
         Ok(DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(epoch,nanos),Utc))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn check_encdec_neg_int32() {
+        let want = -1;
+        let mut buf = Vec::with_capacity(4);
+        encode_int32(want, &mut buf);
+
+        let mut buf = Cursor::new(buf);
+        let got_res = decode_int32(&mut buf);
+        match got_res {
+            Ok(got) => assert_eq!(got, want),
+            Err(e) => panic!("Couldn't decode int32"),
+        }
+    }
+
+    #[test]
+    fn check_encdec_neg_int64() {
+        let want = -1 as i64;
+        let mut buf = Vec::with_capacity(8);
+        encode_int64(want, &mut buf);
+
+        let mut buf = Cursor::new(buf);
+        let got_res = decode_int64(&mut buf);
+        match got_res {
+            Ok(got) => assert_eq!(got, want),
+            Err(e) => panic!("Couldn't decode int32"),
+        }
     }
 }
