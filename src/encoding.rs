@@ -269,12 +269,12 @@ pub mod amino_time {
     use super::*;
     use chrono::{DateTime,NaiveDateTime, Utc};
     pub fn encode<B>(value: DateTime<Utc>, buf: &mut B) where B: BufMut{
-        let mut epoch = value.timestamp() as u64;
-        let nanos = value.timestamp_subsec_nanos() as u64;
+        let mut epoch = value.timestamp();
+        let nanos = value.timestamp_subsec_nanos() as i32;
         encode_field_number_typ3(1,Typ3Byte::Typ3_8Byte, buf);
-        encode_uvarint(epoch, buf);
+        encode_int64(epoch, buf);
         encode_field_number_typ3(2, Typ3Byte::Typ3_4Byte, buf);
-        encode_uvarint(nanos, buf);
+        encode_int32(nanos, buf);
         buf.put_u8(0x04)
 
     }
@@ -289,7 +289,7 @@ pub mod amino_time {
             return Err(DecodeError::new("Invalid Typ3 bytes"))
         }
     }
-        let epoch = decode_uvarint(buf)? as i64;
+        let epoch = decode_int64(buf)? as i64;
 
      {
         let (field_number, typ3) = decode_field_number_typ3(buf)?;
@@ -300,7 +300,7 @@ pub mod amino_time {
             return Err(DecodeError::new("Invalid Typ3 bytes"))
         }
      }
-        let nanos = decode_uvarint(buf)? as u32;
+        let nanos = decode_int32(buf)? as u32;
 
         Ok(DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(epoch,nanos),Utc))
     }
