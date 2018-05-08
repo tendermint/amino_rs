@@ -192,9 +192,19 @@ pub fn encode_int8<B>(num:i8, buf:&mut B) where B:BufMut{
     encode_varint(num as i64, buf)
 }
 
+pub fn encode_uint8<B>(num:u8, buf:&mut B) where B:BufMut{
+    encode_uvarint(num as u64, buf)
+}
+
+
 pub fn encode_int16<B>(num:i16, buf:&mut B) where B:BufMut{
     encode_varint(num as i64, buf)
 }
+pub fn encode_uint16<B>(num:u16, buf:&mut B) where B:BufMut{
+    encode_uvarint(num as u64, buf)
+}
+
+
 pub fn encode_int32<B>(num:i32, buf:&mut B) where B:BufMut{
     buf.put_u32::<BigEndian>(num  as u32);
 }
@@ -207,8 +217,16 @@ pub fn decode_int8<B>(buf: &mut B)-> Result<i8, DecodeError> where B: Buf {
     Ok(decode_varint(buf)? as i8)
 }
 
+pub fn decode_uint8<B>(buf: &mut B)-> Result<u8, DecodeError> where B: Buf {  
+    Ok(decode_uvarint(buf)? as u8)
+}
+
 pub fn decode_int16<B>(buf: &mut B)-> Result<i16, DecodeError> where B: Buf {  
     Ok(decode_varint(buf)? as i16)
+}
+
+pub fn decode_uint16<B>(buf: &mut B)-> Result<u16, DecodeError> where B: Buf {  
+    Ok(decode_uvarint(buf)? as u16)
 }
 
 pub fn decode_int32<B>(buf: &mut B)-> Result<i32, DecodeError> where B: Buf {
