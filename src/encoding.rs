@@ -54,8 +54,8 @@ pub fn byte_to_type3(data: u8) -> Typ3Byte {
 }
 
 pub fn encode_field_number_typ3<B>(field_number: u32, typ: Typ3Byte, buf: &mut B)
-where
-    B: BufMut,
+    where
+        B: BufMut,
 {
     // Pack Typ3 and field number.
     let value = ((field_number as u8) << 3) | typ3_to_byte(typ);
@@ -63,8 +63,8 @@ where
 }
 
 pub fn decode_field_number_typ3<B>(buf: &mut B) -> Result<(u32, Typ3Byte), DecodeError>
-where
-    B: Buf,
+    where
+        B: Buf,
 {
     let value = decode_uvarint(buf)?;
     let typ3 = byte_to_type3(value as u8 & 0x07);
@@ -97,6 +97,7 @@ pub fn compute_disfix(identity: &str) -> (Vec<u8>, Vec<u8>) {
 #[cfg(test)]
 mod disfix_tests {
     use super::*;
+
     #[test]
     fn check_examples() {
         let want_disfix = vec![0x9f, 0x86, 0xd0];
@@ -110,8 +111,8 @@ mod disfix_tests {
 }
 
 pub fn encode_varint<B>(value: i64, buf: &mut B)
-where
-    B: BufMut,
+    where
+        B: BufMut,
 {
     let mut ux = (value as u64) << 1;
     if value < 0 {
@@ -124,8 +125,8 @@ where
 /// The buffer must have enough remaining space (maximum 10 bytes).
 #[inline]
 pub fn encode_uvarint<B>(mut value: u64, buf: &mut B)
-where
-    B: BufMut,
+    where
+        B: BufMut,
 {
     // Safety notes:
     //
@@ -162,8 +163,8 @@ where
 }
 
 pub fn decode_varint<B>(buf: &mut B) -> Result<i64, DecodeError>
-where
-    B: Buf,
+    where
+        B: Buf,
 {
     let val = decode_uvarint(buf)?;
     let x = (val >> 1) as i64;
@@ -176,8 +177,8 @@ where
 /// Decodes a LEB128-encoded variable length integer from the buffer.
 #[allow(never_loop)]
 pub fn decode_uvarint<B>(buf: &mut B) -> Result<u64, DecodeError>
-where
-    B: Buf,
+    where
+        B: Buf,
 {
     // NLL hack.
     'slow: loop {
@@ -207,8 +208,8 @@ where
 /// necessary.
 #[inline(never)]
 fn decode_uvarint_slow<B>(buf: &mut B) -> Result<u64, DecodeError>
-where
-    B: Buf,
+    where
+        B: Buf,
 {
     let mut value = 0;
     for count in 0..min(10, buf.remaining()) {
@@ -223,84 +224,86 @@ where
 }
 
 pub fn encode_int8<B>(num: i8, buf: &mut B)
-where
-    B: BufMut,
+    where
+        B: BufMut,
 {
     encode_varint(num as i64, buf)
 }
 
 pub fn encode_uint8<B>(num: u8, buf: &mut B)
-where
-    B: BufMut,
+    where
+        B: BufMut,
 {
     encode_uvarint(num as u64, buf)
 }
 
 pub fn encode_int16<B>(num: i16, buf: &mut B)
-where
-    B: BufMut,
+    where
+        B: BufMut,
 {
     encode_varint(num as i64, buf)
 }
+
 pub fn encode_uint16<B>(num: u16, buf: &mut B)
-where
-    B: BufMut,
+    where
+        B: BufMut,
 {
     encode_uvarint(num as u64, buf)
 }
 
 pub fn encode_int32<B>(num: i32, buf: &mut B)
-where
-    B: BufMut,
+    where
+        B: BufMut,
 {
     buf.put_u32::<BigEndian>(num as u32);
 }
+
 pub fn encode_int64<B>(num: i64, buf: &mut B)
-where
-    B: BufMut,
+    where
+        B: BufMut,
 {
     buf.put_u64::<BigEndian>(num as u64);
 }
 
 pub fn decode_int8<B>(buf: &mut B) -> Result<i8, DecodeError>
-where
-    B: Buf,
+    where
+        B: Buf,
 {
     Ok(decode_varint(buf)? as i8)
 }
 
 pub fn decode_uint8<B>(buf: &mut B) -> Result<u8, DecodeError>
-where
-    B: Buf,
+    where
+        B: Buf,
 {
     Ok(decode_uvarint(buf)? as u8)
 }
 
 pub fn decode_int16<B>(buf: &mut B) -> Result<i16, DecodeError>
-where
-    B: Buf,
+    where
+        B: Buf,
 {
     Ok(decode_varint(buf)? as i16)
 }
 
 pub fn decode_uint16<B>(buf: &mut B) -> Result<u16, DecodeError>
-where
-    B: Buf,
+    where
+        B: Buf,
 {
     Ok(decode_uvarint(buf)? as u16)
 }
 
 pub fn decode_int32<B>(buf: &mut B) -> Result<i32, DecodeError>
-where
-    B: Buf,
+    where
+        B: Buf,
 {
     let x = B::get_u32::<BigEndian>(buf);
     Ok(x as i32)
 }
 
 pub fn decode_int64<B>(buf: &mut B) -> Result<i64, DecodeError>
-where
-    B: Buf,
+    where
+        B: Buf,
 {
     let x = B::get_u64::<BigEndian>(buf);
     Ok(x as i64)
@@ -310,16 +313,16 @@ pub mod amino_string {
     use super::*;
 
     pub fn encode<B>(value: &str, buf: &mut B)
-    where
-        B: BufMut,
+        where
+            B: BufMut,
     {
         encode_uvarint(value.len() as u64, buf);
         buf.put_slice(value.as_bytes());
     }
 
     pub fn decode<B>(buf: &mut B) -> Result<String, DecodeError>
-    where
-        B: Buf,
+        where
+            B: Buf,
     {
         let len = decode_uvarint(buf)?;
         let mut dst = vec![];
@@ -339,16 +342,18 @@ pub mod amino_string {
 
 pub mod amino_bytes {
     use super::*;
+
     pub fn encode<B>(value: &[u8], buf: &mut B)
-    where
-        B: BufMut,
+        where
+            B: BufMut,
     {
         encode_uvarint(value.len() as u64, buf);
         buf.put_slice(value);
     }
+
     pub fn decode<B>(buf: &mut B) -> Result<Vec<u8>, DecodeError>
-    where
-        B: Buf,
+        where
+            B: Buf,
     {
         let len = decode_uvarint(buf)?;
         let mut dst = vec![];
@@ -368,9 +373,10 @@ pub mod amino_bytes {
 pub mod amino_time {
     use super::*;
     use chrono::{DateTime, NaiveDateTime, Utc};
+
     pub fn encode<B>(value: DateTime<Utc>, buf: &mut B)
-    where
-        B: BufMut,
+        where
+            B: BufMut,
     {
         let mut epoch = value.timestamp();
         let nanos = value.timestamp_subsec_nanos() as i32;
@@ -378,11 +384,12 @@ pub mod amino_time {
         encode_int64(epoch, buf);
         encode_field_number_typ3(2, Typ3Byte::Typ3_4Byte, buf);
         encode_int32(nanos, buf);
-        buf.put_u8(0x04)
+        buf.put_u8(typ3_to_byte(Typ3Byte::Typ3_StructTerm))
     }
+
     pub fn decode<B>(buf: &mut B) -> Result<DateTime<Utc>, DecodeError>
-    where
-        B: Buf,
+        where
+            B: Buf,
     {
         {
             let (field_number, typ3) = decode_field_number_typ3(buf)?;
