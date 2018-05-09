@@ -5,12 +5,12 @@ extern crate sha2;
 mod encoding;
 mod error;
 
-pub use error::{DecodeError, EncodeError};
 pub use encoding::*;
+pub use error::{DecodeError, EncodeError};
 
-pub trait Amino:Sized{
-    fn serialize(self)->Vec<u8>;
-    fn deserialize(&[u8])->Result<Self, DecodeError>;
+pub trait Amino: Sized {
+    fn serialize(self) -> Vec<u8>;
+    fn deserialize(&[u8]) -> Result<Self, DecodeError>;
 }
 
 // #[cfg(test)]
@@ -22,10 +22,9 @@ pub trait Amino:Sized{
 //     struct Bar{
 //         baz: i32
 //     }
-    
+
 //     #[test]
 //     fn it_works() {
 //         assert_eq!(2 + 2, 4);
 //     }
 // }
-
