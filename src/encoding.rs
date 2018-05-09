@@ -174,6 +174,7 @@ where
 }
 
 /// Decodes a LEB128-encoded variable length integer from the buffer.
+#[allow(never_loop)]
 pub fn decode_uvarint<B>(buf: &mut B) -> Result<u64, DecodeError>
 where
     B: Buf,
