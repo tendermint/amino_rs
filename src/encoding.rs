@@ -69,7 +69,8 @@ pub fn decode_field_number_typ3<B>(buf: &mut B) -> Result<(u32, Typ3Byte), Decod
     let value = decode_uvarint(buf)?;
     let typ3 = byte_to_type3(value as u8 & 0x07);
     let field_number = value >> 3;
-    return Ok((field_number as u32, typ3));
+
+    Ok((field_number as u32, typ3))
 }
 
 pub fn compute_disfix(identity: &str) -> (Vec<u8>, Vec<u8>) {
@@ -91,7 +92,8 @@ pub fn compute_disfix(identity: &str) -> (Vec<u8>, Vec<u8>) {
         .take(4)
         .collect();
     prefix_bytes[3] &= 0xF8;
-    return (disamb_bytes, prefix_bytes);
+
+    (disamb_bytes, prefix_bytes)
 }
 
 #[cfg(test)]
@@ -378,7 +380,7 @@ pub mod amino_time {
         where
             B: BufMut,
     {
-        let mut epoch = value.timestamp();
+        let epoch = value.timestamp();
         let nanos = value.timestamp_subsec_nanos() as i32;
         encode_field_number_typ3(1, Typ3Byte::Typ3_8Byte, buf);
         encode_int64(epoch, buf);
@@ -434,7 +436,10 @@ mod tests {
         let got_res = decode_int32(&mut buf);
         match got_res {
             Ok(got) => assert_eq!(got, want),
-            Err(e) => panic!("Couldn't decode int32"),
+            Err(e) => {
+                println!("Unexpected error {}", e);
+                panic!("Couldn't decode int32")
+            },
         }
     }
 
