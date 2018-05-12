@@ -305,7 +305,7 @@ pub mod amino_time {
         encode_int64(epoch, buf);
         encode_field_number_typ3(2, Typ3Byte::Typ3_4Byte, buf);
         encode_int32(nanos, buf);
-        buf.put_u8(0x04)
+        buf.put_u8(typ3_to_byte(Typ3Byte::Typ3_StructTerm));
 
     }
     pub fn decode<B>(buf: &mut B)-> Result<DateTime<Utc>,DecodeError> where B:Buf{
@@ -331,6 +331,10 @@ pub mod amino_time {
         }
      }
         let nanos = decode_int32(buf)? as u32;
+
+        if byte_to_type3(buf.get_u8()) != Typ3Byte::Typ3_StructTerm{
+            return Err(DecodeError::new("Missing Struct Term"));
+        }
 
         Ok(DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(epoch,nanos),Utc))
     }
