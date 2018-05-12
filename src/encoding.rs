@@ -70,14 +70,14 @@ pub fn decode_field_number_typ3<B>( buf: &mut B) ->Result<(u32,Typ3Byte),DecodeE
     return Ok((field_number as u32, typ3))
 }
 
-pub fn check_field_number_typ3<B>(buf: &mut B, expected_field_num: u32, expected_typ3: Typ3Byte)->Result<(), DecodeError>where B:Buf{
+pub fn check_field_number_typ3<B>(expected_field_num: u32, expected_typ3: Typ3Byte, buf: &mut B)->Result<(), DecodeError>where B:Buf{
 
     let (field_number , typ3) = decode_field_number_typ3(buf)?;
     if field_number != expected_field_num{
-        return Err(DecodeError::new(format!("invalid field number for field {}",field_number)));   
+        return Err(DecodeError::new(format!("invalid field number for field {}",expected_field_num)));   
     }
     if typ3 != expected_typ3 {
-                return Err(DecodeError::new(format!("invalid typ3 for field {}",field_number)));
+                return Err(DecodeError::new(format!("invalid typ3 for field {}",expected_field_num)));
             }
     return Ok(());
 }
