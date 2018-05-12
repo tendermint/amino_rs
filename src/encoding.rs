@@ -5,7 +5,7 @@ use DecodeError;
 
 use sha2::{Digest, Sha256};
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub enum Typ3Byte {
     // Typ3 types
     Typ3_Varint,
@@ -83,14 +83,14 @@ where
     let (field_number, typ3) = decode_field_number_typ3(buf)?;
     if field_number != expected_field_num {
         return Err(DecodeError::new(format!(
-            "invalid field number for field {}",
-            expected_field_num
+            "invalid field number, got: {} want: {}",
+            field_number, expected_field_num
         )));
     }
     if typ3 != expected_typ3 {
         return Err(DecodeError::new(format!(
-            "invalid typ3 for field {}",
-            expected_field_num
+            "invalid typ3 for field {}, got: {:?}, want: {:?}",
+            expected_field_num, typ3, expected_typ3
         )));
     }
     return Ok(());
@@ -430,7 +430,7 @@ pub mod amino_time {
         let nanos = decode_int32(buf)? as u32;
 
         if byte_to_type3(buf.get_u8()) != Typ3Byte::Typ3_StructTerm {
-            return Err(DecodeError::new("Missing Struct Term"));
+            return Err(DecodeError::new("missing struct term"));
         }
 
         Ok(DateTime::<Utc>::from_utc(
@@ -454,7 +454,7 @@ mod tests {
         let got_res = decode_int32(&mut buf);
         match got_res {
             Ok(got) => assert_eq!(got, want),
-            Err(e) => panic!("Couldn't decode int32"),
+            Err(e) => panic!("couldn't decode int32"),
         }
     }
 
@@ -468,7 +468,7 @@ mod tests {
         let got_res = decode_int64(&mut buf);
         match got_res {
             Ok(got) => assert_eq!(got, want),
-            Err(e) => panic!("Couldn't decode int32"),
+            Err(e) => panic!("couldn't decode int32"),
         }
     }
 }
