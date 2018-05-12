@@ -5,7 +5,7 @@ use DecodeError;
 
 use sha2::{Digest, Sha256};
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub enum Typ3Byte {
     // Typ3 types
     Typ3_Varint,
@@ -69,8 +69,31 @@ where
     let value = decode_uvarint(buf)?;
     let typ3 = byte_to_type3(value as u8 & 0x07);
     let field_number = value >> 3;
+    return Ok((field_number as u32, typ3));
+}
 
-    Ok((field_number as u32, typ3))
+pub fn check_field_number_typ3<B>(
+    expected_field_num: u32,
+    expected_typ3: Typ3Byte,
+    buf: &mut B,
+) -> Result<(), DecodeError>
+where
+    B: Buf,
+{
+    let (field_number, typ3) = decode_field_number_typ3(buf)?;
+    if field_number != expected_field_num {
+        return Err(DecodeError::new(format!(
+            "invalid field number, got: {} want: {}",
+            field_number, expected_field_num
+        )));
+    }
+    if typ3 != expected_typ3 {
+        return Err(DecodeError::new(format!(
+            "invalid typ3 for field {}, got: {:?}, want: {:?}",
+            expected_field_num, typ3, expected_typ3
+        )));
+    }
+    return Ok(());
 }
 
 pub fn compute_disfix(identity: &str) -> (Vec<u8>, Vec<u8>) {
@@ -344,7 +367,6 @@ pub mod amino_string {
 
 pub mod amino_bytes {
     use super::*;
-
     pub fn encode<B>(value: &[u8], buf: &mut B)
     where
         B: BufMut,
@@ -375,7 +397,6 @@ pub mod amino_bytes {
 pub mod amino_time {
     use super::*;
     use chrono::{DateTime, NaiveDateTime, Utc};
-
     pub fn encode<B>(value: DateTime<Utc>, buf: &mut B)
     where
         B: BufMut,
@@ -415,6 +436,10 @@ pub mod amino_time {
         }
         let nanos = decode_int32(buf)? as u32;
 
+        if byte_to_type3(buf.get_u8()) != Typ3Byte::Typ3_StructTerm {
+            return Err(DecodeError::new("missing struct term"));
+        }
+
         Ok(DateTime::<Utc>::from_utc(
             NaiveDateTime::from_timestamp(epoch, nanos),
             Utc,
@@ -453,7 +478,7 @@ mod tests {
         let got_res = decode_int64(&mut buf);
         match got_res {
             Ok(got) => assert_eq!(got, want),
-            Err(e) => panic!("Couldn't decode int32"),
+            Err(e) => panic!("couldn't decode int32"),
         }
     }
 }
