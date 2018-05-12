@@ -1,49 +1,45 @@
-use bytes::{
-    Buf,
-    BufMut,
-    BigEndian
-};
-use std::cmp::min;  
-use DecodeError;
+use bytes::{BigEndian, Buf, BufMut};
+use std::cmp::min;
 use std::io::Cursor;
+use DecodeError;
 
-use sha2::{Sha256, Digest};
+use sha2::{Digest, Sha256};
 
 #[derive(PartialEq)]
-pub enum Typ3Byte{
+pub enum Typ3Byte {
     // Typ3 types
-	Typ3_Varint,
-	Typ3_8Byte, 
-	Typ3_ByteLength, 
-	Typ3_Struct,
-	Typ3_StructTerm, 
-	Typ3_4Byte,
-	Typ3_List,
-	Typ3_Interface,
-	// Typ4 bit
-	Typ4_Pointer,
-    Invalid
+    Typ3_Varint,
+    Typ3_8Byte,
+    Typ3_ByteLength,
+    Typ3_Struct,
+    Typ3_StructTerm,
+    Typ3_4Byte,
+    Typ3_List,
+    Typ3_Interface,
+    // Typ4 bit
+    Typ4_Pointer,
+    Invalid,
 }
 
-pub fn typ3_to_byte(typ3: Typ3Byte)->u8{
-    match typ3{
-    // Typ3 types
-	Typ3Byte::Typ3_Varint => 0,
-	Typ3Byte::Typ3_8Byte => 1, 
-	Typ3Byte::Typ3_ByteLength => 2, 
-	Typ3Byte::Typ3_Struct => 3,
-	Typ3Byte::Typ3_StructTerm => 4, 
-	Typ3Byte::Typ3_4Byte => 5, 
-	Typ3Byte::Typ3_List => 6,
-	Typ3Byte::Typ3_Interface => 7,
-	// Typ4 bit
-	Typ3Byte::Typ4_Pointer => 8,
-    Typ3Byte::Invalid => panic!("Should not use an invalid Typ3")
+pub fn typ3_to_byte(typ3: Typ3Byte) -> u8 {
+    match typ3 {
+        // Typ3 types
+        Typ3Byte::Typ3_Varint => 0,
+        Typ3Byte::Typ3_8Byte => 1,
+        Typ3Byte::Typ3_ByteLength => 2,
+        Typ3Byte::Typ3_Struct => 3,
+        Typ3Byte::Typ3_StructTerm => 4,
+        Typ3Byte::Typ3_4Byte => 5,
+        Typ3Byte::Typ3_List => 6,
+        Typ3Byte::Typ3_Interface => 7,
+        // Typ4 bit
+        Typ3Byte::Typ4_Pointer => 8,
+        Typ3Byte::Invalid => panic!("Should not use an invalid Typ3"),
     }
 }
 
-pub fn byte_to_type3(data: u8)->Typ3Byte{
-    match data{
+pub fn byte_to_type3(data: u8) -> Typ3Byte {
+    match data {
         0 => Typ3Byte::Typ3_Varint,
         1 => Typ3Byte::Typ3_8Byte,
         2 => Typ3Byte::Typ3_ByteLength,
@@ -53,43 +49,73 @@ pub fn byte_to_type3(data: u8)->Typ3Byte{
         6 => Typ3Byte::Typ3_List,
         7 => Typ3Byte::Typ3_Interface,
         8 => Typ3Byte::Typ4_Pointer,
-        _ => Typ3Byte::Invalid
+        _ => Typ3Byte::Invalid,
     }
-} 
+}
 
-pub fn encode_field_number_typ3<B>(field_number: u32, typ:Typ3Byte, buf: &mut B) where B:BufMut{
-	// Pack Typ3 and field number.
-	let value = ((field_number as u8) << 3) | typ3_to_byte(typ);
+pub fn encode_field_number_typ3<B>(field_number: u32, typ: Typ3Byte, buf: &mut B)
+where
+    B: BufMut,
+{
+    // Pack Typ3 and field number.
+    let value = ((field_number as u8) << 3) | typ3_to_byte(typ);
     buf.put_u8(value);
 }
 
-pub fn decode_field_number_typ3<B>( buf: &mut B) ->Result<(u32,Typ3Byte),DecodeError> where B:Buf{
+pub fn decode_field_number_typ3<B>(buf: &mut B) -> Result<(u32, Typ3Byte), DecodeError>
+where
+    B: Buf,
+{
     let value = decode_uvarint(buf)?;
     let typ3 = byte_to_type3(value as u8 & 0x07);
-    let field_number = value >>3;
-    return Ok((field_number as u32, typ3))
+    let field_number = value >> 3;
+    return Ok((field_number as u32, typ3));
 }
 
-pub fn check_field_number_typ3<B>(expected_field_num: u32, expected_typ3: Typ3Byte, buf: &mut B)->Result<(), DecodeError>where B:Buf{
-
-    let (field_number , typ3) = decode_field_number_typ3(buf)?;
-    if field_number != expected_field_num{
-        return Err(DecodeError::new(format!("invalid field number for field {}",expected_field_num)));   
+pub fn check_field_number_typ3<B>(
+    expected_field_num: u32,
+    expected_typ3: Typ3Byte,
+    buf: &mut B,
+) -> Result<(), DecodeError>
+where
+    B: Buf,
+{
+    let (field_number, typ3) = decode_field_number_typ3(buf)?;
+    if field_number != expected_field_num {
+        return Err(DecodeError::new(format!(
+            "invalid field number for field {}",
+            expected_field_num
+        )));
     }
     if typ3 != expected_typ3 {
-                return Err(DecodeError::new(format!("invalid typ3 for field {}",expected_field_num)));
-            }
+        return Err(DecodeError::new(format!(
+            "invalid typ3 for field {}",
+            expected_field_num
+        )));
+    }
     return Ok(());
 }
 
-pub fn compute_disfix(identity: &str)->(Vec<u8>, Vec<u8>) {
+pub fn compute_disfix(identity: &str) -> (Vec<u8>, Vec<u8>) {
     let mut sh = Sha256::default();
     sh.input(identity.as_bytes());
-    let output =  sh.result();
-    let disamb_bytes = output.iter().skip_while(|&x| *x== 0x00).cloned().take(3).collect();
-    let mut prefix_bytes:Vec<u8> = output.iter().skip_while (|&x| *x== 0x00).skip(3).skip_while(|&x| *x== 0x00).cloned().take(4).collect();
+    let output = sh.result();
+    let disamb_bytes = output
+        .iter()
+        .skip_while(|&x| *x == 0x00)
+        .cloned()
+        .take(3)
+        .collect();
+    let mut prefix_bytes: Vec<u8> = output
+        .iter()
+        .skip_while(|&x| *x == 0x00)
+        .skip(3)
+        .skip_while(|&x| *x == 0x00)
+        .cloned()
+        .take(4)
+        .collect();
     prefix_bytes[3] &= 0xF8;
-    return (disamb_bytes,prefix_bytes);
+    return (disamb_bytes, prefix_bytes);
 }
 
 #[cfg(test)]
@@ -100,14 +126,17 @@ mod disfix_tests {
         let want_disfix = vec![0x9f, 0x86, 0xd0];
         let want_prefix = vec![0x81, 0x88, 0x4c, 0x78];
 
-        let (disfix , prefix) = compute_disfix("test"); 
+        let (disfix, prefix) = compute_disfix("test");
 
         assert_eq!(want_disfix, disfix);
         assert_eq!(want_prefix, prefix);
     }
 }
 
-pub fn encode_varint<B>(value: i64, buf: &mut B) where B: BufMut {
+pub fn encode_varint<B>(value: i64, buf: &mut B)
+where
+    B: BufMut,
+{
     let mut ux = (value as u64) << 1;
     if value < 0 {
         ux = !ux;
@@ -118,7 +147,10 @@ pub fn encode_varint<B>(value: i64, buf: &mut B) where B: BufMut {
 /// Encodes an integer value into LEB128 variable length format, and writes it to the buffer.
 /// The buffer must have enough remaining space (maximum 10 bytes).
 #[inline]
-pub fn encode_uvarint<B>(mut value: u64, buf: &mut B) where B: BufMut {
+pub fn encode_uvarint<B>(mut value: u64, buf: &mut B)
+where
+    B: BufMut,
+{
     // Safety notes:
     //
     // - bytes_mut is unsafe because it may return an uninitialized slice.
@@ -142,24 +174,34 @@ pub fn encode_uvarint<B>(mut value: u64, buf: &mut B) where B: BufMut {
             }
         }
 
-        unsafe { buf.advance_mut(i); }
+        unsafe {
+            buf.advance_mut(i);
+        }
         debug_assert!(buf.has_remaining_mut());
     }
 
-    unsafe { buf.advance_mut(i); }
+    unsafe {
+        buf.advance_mut(i);
+    }
 }
 
-pub fn decode_varint<B>(buf: &mut B) -> Result<i64, DecodeError> where B: Buf {
+pub fn decode_varint<B>(buf: &mut B) -> Result<i64, DecodeError>
+where
+    B: Buf,
+{
     let val = decode_uvarint(buf)?;
     let x = (val >> 1) as i64;
-    if val & 1_u64 != 0{
-        return Ok(!x)
+    if val & 1_u64 != 0 {
+        return Ok(!x);
     }
     Ok(x)
 }
 
 /// Decodes a LEB128-encoded variable length integer from the buffer.
-pub fn decode_uvarint<B>(buf: &mut B) -> Result<u64, DecodeError> where B: Buf {
+pub fn decode_uvarint<B>(buf: &mut B) -> Result<u64, DecodeError>
+where
+    B: Buf,
+{
     // NLL hack.
     'slow: loop {
         // Another NLL hack.
@@ -187,7 +229,10 @@ pub fn decode_uvarint<B>(buf: &mut B) -> Result<u64, DecodeError> where B: Buf {
 /// Decodes a LEB128-encoded variable length integer from the buffer, advancing the buffer as
 /// necessary.
 #[inline(never)]
-fn decode_uvarint_slow<B>(buf: &mut B) -> Result<u64, DecodeError> where B: Buf {
+fn decode_uvarint_slow<B>(buf: &mut B) -> Result<u64, DecodeError>
+where
+    B: Buf,
+{
     let mut value = 0;
     for count in 0..min(10, buf.remaining()) {
         let byte = buf.get_u8();
@@ -200,143 +245,198 @@ fn decode_uvarint_slow<B>(buf: &mut B) -> Result<u64, DecodeError> where B: Buf 
     Err(DecodeError::new("invalid varint"))
 }
 
-pub fn encode_int8<B>(num:i8, buf:&mut B) where B:BufMut{
+pub fn encode_int8<B>(num: i8, buf: &mut B)
+where
+    B: BufMut,
+{
     encode_varint(num as i64, buf)
 }
 
-pub fn encode_uint8<B>(num:u8, buf:&mut B) where B:BufMut{
+pub fn encode_uint8<B>(num: u8, buf: &mut B)
+where
+    B: BufMut,
+{
     encode_uvarint(num as u64, buf)
 }
 
-
-pub fn encode_int16<B>(num:i16, buf:&mut B) where B:BufMut{
+pub fn encode_int16<B>(num: i16, buf: &mut B)
+where
+    B: BufMut,
+{
     encode_varint(num as i64, buf)
 }
-pub fn encode_uint16<B>(num:u16, buf:&mut B) where B:BufMut{
+pub fn encode_uint16<B>(num: u16, buf: &mut B)
+where
+    B: BufMut,
+{
     encode_uvarint(num as u64, buf)
 }
 
-
-pub fn encode_int32<B>(num:i32, buf:&mut B) where B:BufMut{
-    buf.put_u32::<BigEndian>(num  as u32);
+pub fn encode_int32<B>(num: i32, buf: &mut B)
+where
+    B: BufMut,
+{
+    buf.put_u32::<BigEndian>(num as u32);
 }
-pub fn encode_int64<B>(num:i64, buf:&mut B) where B:BufMut{
+pub fn encode_int64<B>(num: i64, buf: &mut B)
+where
+    B: BufMut,
+{
     buf.put_u64::<BigEndian>(num as u64);
 }
 
-
-pub fn decode_int8<B>(buf: &mut B)-> Result<i8, DecodeError> where B: Buf {  
+pub fn decode_int8<B>(buf: &mut B) -> Result<i8, DecodeError>
+where
+    B: Buf,
+{
     Ok(decode_varint(buf)? as i8)
 }
 
-pub fn decode_uint8<B>(buf: &mut B)-> Result<u8, DecodeError> where B: Buf {  
+pub fn decode_uint8<B>(buf: &mut B) -> Result<u8, DecodeError>
+where
+    B: Buf,
+{
     Ok(decode_uvarint(buf)? as u8)
 }
 
-pub fn decode_int16<B>(buf: &mut B)-> Result<i16, DecodeError> where B: Buf {  
+pub fn decode_int16<B>(buf: &mut B) -> Result<i16, DecodeError>
+where
+    B: Buf,
+{
     Ok(decode_varint(buf)? as i16)
 }
 
-pub fn decode_uint16<B>(buf: &mut B)-> Result<u16, DecodeError> where B: Buf {  
+pub fn decode_uint16<B>(buf: &mut B) -> Result<u16, DecodeError>
+where
+    B: Buf,
+{
     Ok(decode_uvarint(buf)? as u16)
 }
 
-pub fn decode_int32<B>(buf: &mut B)-> Result<i32, DecodeError> where B: Buf {
-
+pub fn decode_int32<B>(buf: &mut B) -> Result<i32, DecodeError>
+where
+    B: Buf,
+{
     let x = B::get_u32::<BigEndian>(buf);
     Ok(x as i32)
 }
 
-pub fn decode_int64<B>(buf: &mut B)-> Result<i64, DecodeError> where B: Buf {
-
-    let x = B::get_u64::<BigEndian>(buf);   
+pub fn decode_int64<B>(buf: &mut B) -> Result<i64, DecodeError>
+where
+    B: Buf,
+{
+    let x = B::get_u64::<BigEndian>(buf);
     Ok(x as i64)
 }
-
 
 pub mod amino_string {
     use super::*;
 
-    pub fn encode<B>(value: &str,
-                     buf: &mut B) where B: BufMut {
+    pub fn encode<B>(value: &str, buf: &mut B)
+    where
+        B: BufMut,
+    {
         encode_uvarint(value.len() as u64, buf);
         buf.put_slice(value.as_bytes());
     }
 
-    pub fn decode<B>(buf: &mut B)->Result<String,DecodeError> where B: Buf {
-             let len = decode_uvarint(buf)?;
-             let mut dst = vec![];
-             dst.resize(len as usize,0);
-             buf.copy_to_slice(&mut dst);
-             if dst.len() != len as usize{
-                 Err(DecodeError::new(format!("invalid string length have {} want {}",len as usize, dst.len())))?
-             }
-             Ok(String::from_utf8(dst).map_err(|_| {
-                DecodeError::new("invalid string value: data is not UTF-8 encoded")
-            })?)
+    pub fn decode<B>(buf: &mut B) -> Result<String, DecodeError>
+    where
+        B: Buf,
+    {
+        let len = decode_uvarint(buf)?;
+        let mut dst = vec![];
+        dst.resize(len as usize, 0);
+        buf.copy_to_slice(&mut dst);
+        if dst.len() != len as usize {
+            Err(DecodeError::new(format!(
+                "invalid string length have {} want {}",
+                len as usize,
+                dst.len()
+            )))?
         }
+        Ok(String::from_utf8(dst)
+            .map_err(|_| DecodeError::new("invalid string value: data is not UTF-8 encoded"))?)
+    }
 }
 
 pub mod amino_bytes {
     use super::*;
-    pub fn encode<B>(value: &[u8], buf: &mut B) where B: BufMut {
+    pub fn encode<B>(value: &[u8], buf: &mut B)
+    where
+        B: BufMut,
+    {
         encode_uvarint(value.len() as u64, buf);
         buf.put_slice(value);
     }
-    pub fn decode<B>(buf: &mut B)->Result<Vec<u8>,DecodeError> where B: Buf {
-             let len = decode_uvarint(buf)?;
-             let mut dst = vec!();
-             dst.resize(len as usize,0);
-             buf.copy_to_slice(&mut dst);
-             if dst.len() != len as usize{
-                 Err(DecodeError::new( format!("invalid byte length have {} want {}",len as usize, dst.len())))?
-             }
-             Ok(dst)
+    pub fn decode<B>(buf: &mut B) -> Result<Vec<u8>, DecodeError>
+    where
+        B: Buf,
+    {
+        let len = decode_uvarint(buf)?;
+        let mut dst = vec![];
+        dst.resize(len as usize, 0);
+        buf.copy_to_slice(&mut dst);
+        if dst.len() != len as usize {
+            Err(DecodeError::new(format!(
+                "invalid byte length have {} want {}",
+                len as usize,
+                dst.len()
+            )))?
         }
+        Ok(dst)
+    }
 }
 
 pub mod amino_time {
     use super::*;
-    use chrono::{DateTime,NaiveDateTime, Utc};
-    pub fn encode<B>(value: DateTime<Utc>, buf: &mut B) where B: BufMut{
+    use chrono::{DateTime, NaiveDateTime, Utc};
+    pub fn encode<B>(value: DateTime<Utc>, buf: &mut B)
+    where
+        B: BufMut,
+    {
         let mut epoch = value.timestamp();
         let nanos = value.timestamp_subsec_nanos() as i32;
-        encode_field_number_typ3(1,Typ3Byte::Typ3_8Byte, buf);
+        encode_field_number_typ3(1, Typ3Byte::Typ3_8Byte, buf);
         encode_int64(epoch, buf);
         encode_field_number_typ3(2, Typ3Byte::Typ3_4Byte, buf);
         encode_int32(nanos, buf);
         buf.put_u8(typ3_to_byte(Typ3Byte::Typ3_StructTerm));
-
     }
-    pub fn decode<B>(buf: &mut B)-> Result<DateTime<Utc>,DecodeError> where B:Buf{
-
-     {
-        let (field_number, typ3) = decode_field_number_typ3(buf)?;
-        if field_number != 1{
-            return Err(DecodeError::new("Field number in time struct is not 1"))
+    pub fn decode<B>(buf: &mut B) -> Result<DateTime<Utc>, DecodeError>
+    where
+        B: Buf,
+    {
+        {
+            let (field_number, typ3) = decode_field_number_typ3(buf)?;
+            if field_number != 1 {
+                return Err(DecodeError::new("Field number in time struct is not 1"));
+            }
+            if typ3 != Typ3Byte::Typ3_8Byte {
+                return Err(DecodeError::new("Invalid Typ3 bytes"));
+            }
         }
-        if typ3 != Typ3Byte::Typ3_8Byte{
-            return Err(DecodeError::new("Invalid Typ3 bytes"))
-        }
-    }
         let epoch = decode_int64(buf)? as i64;
 
-     {
-        let (field_number, typ3) = decode_field_number_typ3(buf)?;
-        if field_number != 2{
-            return Err(DecodeError::new("Field number in time struct is not 2"))
+        {
+            let (field_number, typ3) = decode_field_number_typ3(buf)?;
+            if field_number != 2 {
+                return Err(DecodeError::new("Field number in time struct is not 2"));
+            }
+            if typ3 != Typ3Byte::Typ3_4Byte {
+                return Err(DecodeError::new("Invalid Typ3 bytes"));
+            }
         }
-        if typ3 != Typ3Byte::Typ3_4Byte{
-            return Err(DecodeError::new("Invalid Typ3 bytes"))
-        }
-     }
         let nanos = decode_int32(buf)? as u32;
 
-        if byte_to_type3(buf.get_u8()) != Typ3Byte::Typ3_StructTerm{
+        if byte_to_type3(buf.get_u8()) != Typ3Byte::Typ3_StructTerm {
             return Err(DecodeError::new("Missing Struct Term"));
         }
 
-        Ok(DateTime::<Utc>::from_utc(NaiveDateTime::from_timestamp(epoch,nanos),Utc))
+        Ok(DateTime::<Utc>::from_utc(
+            NaiveDateTime::from_timestamp(epoch, nanos),
+            Utc,
+        ))
     }
 }
 
