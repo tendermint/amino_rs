@@ -115,12 +115,14 @@ pub fn compute_disfix(identity: &str) -> (Vec<u8>, Vec<u8>) {
         .take(4)
         .collect();
     prefix_bytes[3] &= 0xF8;
-    return (disamb_bytes, prefix_bytes);
+
+    (disamb_bytes, prefix_bytes)
 }
 
 #[cfg(test)]
 mod disfix_tests {
     use super::*;
+
     #[test]
     fn check_examples() {
         let want_disfix = vec![0x9f, 0x86, 0xd0];
@@ -198,6 +200,7 @@ where
 }
 
 /// Decodes a LEB128-encoded variable length integer from the buffer.
+#[allow(never_loop)]
 pub fn decode_uvarint<B>(buf: &mut B) -> Result<u64, DecodeError>
 where
     B: Buf,
@@ -265,6 +268,7 @@ where
 {
     encode_varint(num as i64, buf)
 }
+
 pub fn encode_uint16<B>(num: u16, buf: &mut B)
 where
     B: BufMut,
@@ -278,6 +282,7 @@ where
 {
     buf.put_u32::<BigEndian>(num as u32);
 }
+
 pub fn encode_int64<B>(num: i64, buf: &mut B)
 where
     B: BufMut,
@@ -369,6 +374,7 @@ pub mod amino_bytes {
         encode_uvarint(value.len() as u64, buf);
         buf.put_slice(value);
     }
+
     pub fn decode<B>(buf: &mut B) -> Result<Vec<u8>, DecodeError>
     where
         B: Buf,
@@ -395,14 +401,15 @@ pub mod amino_time {
     where
         B: BufMut,
     {
-        let mut epoch = value.timestamp();
+        let epoch = value.timestamp();
         let nanos = value.timestamp_subsec_nanos() as i32;
         encode_field_number_typ3(1, Typ3Byte::Typ3_8Byte, buf);
         encode_int64(epoch, buf);
         encode_field_number_typ3(2, Typ3Byte::Typ3_4Byte, buf);
         encode_int32(nanos, buf);
-        buf.put_u8(typ3_to_byte(Typ3Byte::Typ3_StructTerm));
+        buf.put_u8(typ3_to_byte(Typ3Byte::Typ3_StructTerm))
     }
+
     pub fn decode<B>(buf: &mut B) -> Result<DateTime<Utc>, DecodeError>
     where
         B: Buf,
@@ -454,7 +461,10 @@ mod tests {
         let got_res = decode_int32(&mut buf);
         match got_res {
             Ok(got) => assert_eq!(got, want),
-            Err(e) => panic!("couldn't decode int32"),
+            Err(e) => {
+                println!("Unexpected error {}", e);
+                panic!("Couldn't decode int32")
+            }
         }
     }
 
