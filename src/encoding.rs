@@ -111,6 +111,25 @@ where
     }
 }
 
+pub fn consume_prefix<B>(buf: &mut B, registered_type: &str) -> Result<(), DecodeError>
+where
+    B: Buf,
+{
+    let (_, mut pre) = compute_disfix(registered_type);
+
+    pre[3] |= typ3_to_byte(Typ3Byte::Typ3_Struct);
+    let mut actual_prefix = vec![0u8; pre.len()];
+    buf.copy_to_slice(actual_prefix.as_mut_slice());
+    if actual_prefix != pre {
+        Err(DecodeError::new(format!(
+            "invalid prefix got: {:?}, want: {:?}",
+            actual_prefix, pre
+        )))
+    } else {
+        Ok(())
+    }
+}
+
 pub fn compute_disfix(identity: &str) -> (Vec<u8>, Vec<u8>) {
     let mut sh = Sha256::default();
     sh.input(identity.as_bytes());
