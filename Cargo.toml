@@ -1,7 +1,7 @@
 [package]
 name = "amino"
 version = "0.1.0"
-authors = ["zaki"]
+authors = ["zaki", "Ismail Khoffi <ismail@tendermint.com"]
 
 
 [dependencies]

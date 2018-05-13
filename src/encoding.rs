@@ -69,7 +69,8 @@ where
     let value = decode_uvarint(buf)?;
     let typ3 = byte_to_type3(value as u8 & 0x07);
     let field_number = value >> 3;
-    return Ok((field_number as u32, typ3));
+
+    Ok((field_number as u32, typ3))
 }
 
 pub fn check_field_number_typ3<B>(
@@ -82,18 +83,32 @@ where
 {
     let (field_number, typ3) = decode_field_number_typ3(buf)?;
     if field_number != expected_field_num {
-        return Err(DecodeError::new(format!(
+        Err(DecodeError::new(format!(
             "invalid field number, got: {} want: {}",
             field_number, expected_field_num
-        )));
-    }
-    if typ3 != expected_typ3 {
-        return Err(DecodeError::new(format!(
+        )))
+    } else if typ3 != expected_typ3 {
+        Err(DecodeError::new(format!(
             "invalid typ3 for field {}, got: {:?}, want: {:?}",
             expected_field_num, typ3, expected_typ3
-        )));
+        )))
+    } else {
+        Ok(())
     }
-    return Ok(());
+}
+
+pub fn consume_length<B>(buf: &mut B) -> Result<(), DecodeError>
+where
+    B: Buf,
+{
+    let len_field = decode_uvarint(buf)?;
+    let data_length = buf.remaining() as u64;
+
+    if data_length != len_field {
+        Err(DecodeError::new("invalid length field"))
+    } else {
+        Ok(())
+    }
 }
 
 pub fn compute_disfix(identity: &str) -> (Vec<u8>, Vec<u8>) {
