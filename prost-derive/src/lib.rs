@@ -86,10 +86,7 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
                 let s = reg.len() - 1;
                 assert_eq!(reg.remove(s), '"');
                 let (_dis, pre) = compute_disfix(&reg[..]);
-                println!("{}", reg);
 
-                println!("compute_disfix for {}", &reg[..]);
-                println!("compute_disfix={:x?}", pre);
                 Some(pre)
             }
             None => None,
@@ -99,8 +96,8 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
     let comp_prefix = match prefix {
         Some(p) => {
             quote! {
+                // add prefix bytes for registered types:
                 let pre = vec![#(#p),*];
-                println!("{:x?}", pre);
                 buf.put(pre);
             }
         }
@@ -255,8 +252,9 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
                 #[allow(unused_variables)]
                 fn encode_raw<B>(&self, buf: &mut B) where B: _bytes::BufMut {
                     if #is_registered {
+                        // TODO: in go-amino this only get prefixed if MarhsalBinary is used
+                        // opposed to MarshalBinaryBare
                         let len = 4 #(+ #encoded_len2)*;
-                        //buf.put(len);
                         _prost::encoding::encode_varint(len as u64, buf);
                     } else {
                         // not length prefixed!
@@ -310,7 +308,6 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
             #methods
         };
     };
-    //println!("output: {}", expanded);
     Ok(expanded.into())
 }
 
@@ -586,7 +583,6 @@ mod tests {
         {
             let want_disfix = vec![0x85, 0x6a, 0x57];
             let want_prefix = vec![0xbf, 0x58, 0xca, 0xef];
-            println!("want_prefix={:x?}", want_prefix);
             let (disam, prefix) = compute_disfix("tendermint/socketpv/SignHeartbeatMsg");
             assert_eq!(disam, want_disfix);
             assert_eq!(prefix, want_prefix);
