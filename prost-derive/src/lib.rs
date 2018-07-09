@@ -48,7 +48,7 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
     if amino_name_attrs.len() > 1 {
         bail!("got more than one registered aminoName");
     }
-    let isRegistered = amino_name_attrs.len() == 1;
+    let is_registered = amino_name_attrs.len() == 1;
     // TODO(ismail): move this into separate function!
     let amino_name: Option<String> = {
         match amino_name_attrs.first() {
@@ -83,7 +83,7 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
         match amino_name {
             Some(mut reg) => {
                 assert_eq!(reg.remove(0), '"');
-                let s = reg.len()-1;
+                let s = reg.len() - 1;
                 assert_eq!(reg.remove(s), '"');
                 let (_dis, pre) = compute_disfix(&reg[..]);
                 println!("{}", reg);
@@ -103,7 +103,7 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
                 println!("{:x?}", pre);
                 buf.put(pre);
             }
-        },
+        }
         None => quote!(),
     };
 
@@ -172,6 +172,8 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
         .map(|&(ref field_ident, ref field)| {
             field.encoded_len(quote!(self.#field_ident))
         });
+
+    let encoded_len2 = encoded_len.clone();
 
     let encode = fields.iter()
         .map(|&(ref field_ident, ref field)| {
@@ -252,6 +254,13 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
             impl _prost::Message for #ident {
                 #[allow(unused_variables)]
                 fn encode_raw<B>(&self, buf: &mut B) where B: _bytes::BufMut {
+                    if #is_registered {
+                        let len = 4 #(+ #encoded_len2)*;
+                        //buf.put(len);
+                        _prost::encoding::encode_varint(len as u64, buf);
+                    } else {
+                        // not length prefixed!
+                    }
                     #comp_prefix
                     #(#encode)*
                 }
@@ -269,7 +278,12 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
 
                 #[inline]
                 fn encoded_len(&self) -> usize {
-                    0 #(+ #encoded_len)*
+                    let len = 0 #(+ #encoded_len)*;
+                    if #is_registered {
+                        4 + len
+                    } else {
+                        len
+                    }
                 }
 
                 fn clear(&mut self) {
@@ -539,7 +553,7 @@ fn compute_disfix(identity: &str) -> (Vec<u8>, Vec<u8>) {
         .take(3)
         .collect();
 
-    let mut prefix_bytes: Vec<u8> = output
+    let prefix_bytes: Vec<u8> = output
         .iter()
         .filter(|&x| *x != 0x00)
         .skip(3)
