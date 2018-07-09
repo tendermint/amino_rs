@@ -6,7 +6,7 @@ extern crate bytes;
 #[macro_use]
 extern crate quickcheck;
 
-mod error;
+pub mod error;
 mod message;
 mod types;
 
