@@ -170,7 +170,7 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
             field.encoded_len(quote!(self.#field_ident))
         });
 
-    let encoded_len2 = encoded_len.clone();
+    let (encoded_len2, encoded_len3) = (encoded_len.clone(), encoded_len.clone());
 
     let encode = fields.iter()
         .map(|&(ref field_ident, ref field)| {
@@ -246,13 +246,14 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
         mod #module {
             extern crate prost as _prost;
             extern crate bytes as _bytes;
+
             use super::*;
 
             impl _prost::Message for #ident {
                 #[allow(unused_variables)]
                 fn encode_raw<B>(&self, buf: &mut B) where B: _bytes::BufMut {
                     if #is_registered {
-                        // TODO: in go-amino this only get prefixed if MarhsalBinary is used
+                        // TODO: in go-amino this only get length-prefixed if MarhsalBinary is used
                         // opposed to MarshalBinaryBare
                         let len = 4 #(+ #encoded_len2)*;
                         _prost::encoding::encode_varint(len as u64, buf);
@@ -267,6 +268,14 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
                 fn merge_field<B>(&mut self, buf: &mut B) -> ::std::result::Result<(), _prost::DecodeError>
                 where B: _bytes::Buf {
                     #struct_name
+                    if #is_registered {
+                        // skip some bytes: varint(total_len) || prefix_bytes:
+                        let mut tmp_buf = vec![];
+                        // prefix + total_encoded_len:
+                        let len = 4 #(+ #encoded_len3)*;
+                        _prost::encoding::encode_varint(len as u64, &mut tmp_buf);
+                        buf.advance(len + tmp_buf.len());
+                    }
                     let (tag, wire_type) = _prost::encoding::decode_key(buf)?;
                     match tag {
                         #(#merge)*
