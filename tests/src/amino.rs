@@ -7,13 +7,21 @@ use prost::Message;
 fn amino() {
 
     #[derive(Clone, PartialEq, Message)]
-    pub struct Signature{
-        #[prost(bytes, tag="1")]
-        pub s: Vec<u8>,
+    pub struct PartsSetHeader {
+        #[prost(sint64, tag="1")]
+        total: i64,
+        #[prost(bytes, tag="2")]
+        hash: Vec<u8>,
     }
-    // It's a bit odd we can not derive on:
-    // pub struct Signature(pub [u8; SIGNATURE_SIZE]);
-    // ->  proc-macro derive panicked "Ident cannot be a number; use Literal instead"
+
+
+    #[derive(Clone, PartialEq, Message)]
+    pub struct BlockID {
+        #[prost(bytes, tag="1")]
+        hash: Vec<u8>,
+        #[prost(message, tag="2")]
+        parts_header: Option<PartsSetHeader>,
+    }
 
     #[derive(Clone, PartialEq, Message)]
     struct Heartbeat {
@@ -28,7 +36,7 @@ fn amino() {
         #[prost(sint64)]
         sequence: i64,
         #[prost(message)]
-        signature: Option<Signature>,
+        signature: Option<Vec<u8>>,
     }
 
     #[derive(Clone, PartialEq, Message)]
