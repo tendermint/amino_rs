@@ -44,9 +44,9 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
         into_iter().
         filter(|a| a.
             path.segments.first().unwrap().
-            value().ident == "aminoName").collect();
+            value().ident == "amino_name").collect();
     if amino_name_attrs.len() > 1 {
-        bail!("got more than one registered aminoName");
+        bail!("got more than one registered amino_name");
     }
     let is_registered = amino_name_attrs.len() == 1;
     // TODO(ismail): move this into separate function!
@@ -320,7 +320,7 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
     Ok(expanded.into())
 }
 
-#[proc_macro_derive(Message, attributes(prost, aminoName, aminoDisamb))]
+#[proc_macro_derive(Message, attributes(prost, amino_name, aminoDisamb))]
 pub fn message(input: TokenStream) -> TokenStream {
     try_message(input).unwrap()
 }
