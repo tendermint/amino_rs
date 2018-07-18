@@ -26,7 +26,10 @@ use field::{
     bool_attr,
     set_option,
     tag_attr,
+    amino_name_attr,
 };
+
+use super::compute_disfix;
 
 /// A scalar protobuf field.
 #[derive(Clone)]
@@ -34,6 +37,8 @@ pub struct Field {
     pub ty: Ty,
     pub kind: Kind,
     pub tag: u32,
+    // this is to be able to de/encode registered type aliases:
+    pub amino_prefix: Vec<u8>,
 }
 
 impl Field {
@@ -44,6 +49,7 @@ impl Field {
         let mut packed = None;
         let mut default = None;
         let mut tag = None;
+        let mut amino_name = None;
 
         let mut unknown_attrs = Vec::new();
 
@@ -54,6 +60,8 @@ impl Field {
                 set_option(&mut packed, p, "duplicate packed attributes")?;
             } else if let Some(t) = tag_attr(attr)? {
                 set_option(&mut tag, t, "duplicate tag attributes")?;
+            } else if let Some(n) = amino_name_attr(attr)? {
+                set_option(&mut amino_name, n, "duplicate amino_name attributes")?;
             } else if let Some(l) = Label::from_attr(attr) {
                 set_option(&mut label, l, "duplicate label attributes")?;
             } else if let Some(d) = DefaultValue::from_attr(attr)? {
@@ -62,7 +70,6 @@ impl Field {
                 unknown_attrs.push(attr);
             }
         }
-
         let ty = match ty {
             Some(ty) => ty,
             None => return Ok(None),
@@ -102,11 +109,19 @@ impl Field {
             (Some(Label::Repeated), packed, false) if packed.unwrap_or(ty.is_numeric()) => Kind::Packed,
             (Some(Label::Repeated), _, false) => Kind::Repeated,
         };
+        let amino_prefix: Vec<u8> = match amino_name {
+            Some(n) => {
+                let (_dis, pre) = compute_disfix(n.as_str());
+                pre
+            }
+            None => vec![],
+        };
 
         Ok(Some(Field {
             ty: ty,
             kind: kind,
             tag: tag,
+            amino_prefix: amino_prefix,
         }))
     }
 
@@ -129,7 +144,13 @@ impl Field {
     pub fn encode(&self, ident: TokenStream) -> TokenStream {
         let module = self.ty.module();
         let encode_fn = match self.kind {
-            Kind::Plain(..) | Kind::Optional(..) | Kind::Required(..) => quote!(encode),
+            Kind::Plain(..) | Kind::Optional(..) | Kind::Required(..) => {
+                if self.amino_prefix.len() > 0 {
+                    quote!(encode_with_prefix)
+                } else {
+                    quote!(encode)
+                }
+            },
             Kind::Repeated => quote!(encode_repeated),
             Kind::Packed => quote!(encode_packed),
         };
@@ -139,9 +160,18 @@ impl Field {
         match self.kind {
             Kind::Plain(ref default) => {
                 let default = default.typed();
-                quote! {
-                    if #ident != #default {
-                        #encode_fn(#tag, &#ident, buf);
+                if self.amino_prefix.len() > 0 {
+                    let pre = &self.amino_prefix;
+                    quote! {
+                        if #ident != #default {
+                            #encode_fn(#tag, &#ident, &vec![#(#pre),*], buf);
+                        }
+                    }
+                } else {
+                    quote! {
+                        if #ident != #default {
+                            #encode_fn(#tag, &#ident, buf);
+                        }
                     }
                 }
             },
@@ -188,13 +218,18 @@ impl Field {
         };
         let encoded_len_fn = quote!(_prost::encoding::#module::#encoded_len_fn);
         let tag = self.tag;
+        let is_amino_prefixed = self.amino_prefix.len() > 0;
 
         match self.kind {
             Kind::Plain(ref default) => {
                 let default = default.typed();
                 quote! {
                     if #ident != #default {
-                        #encoded_len_fn(#tag, &#ident)
+                        if #is_amino_prefixed {
+                            #encoded_len_fn(#tag, &#ident) + 5
+                        } else {
+                            #encoded_len_fn(#tag, &#ident)
+                        }
                     } else {
                         0
                     }
@@ -527,7 +562,7 @@ impl fmt::Display for Ty {
 }
 
 /// Scalar Protobuf field types.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Kind {
     /// A plain proto3 scalar field.
     Plain(DefaultValue),

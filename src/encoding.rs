@@ -318,6 +318,10 @@ macro_rules! varint {
                 encode_varint($to_uint64, buf);
             }
 
+            pub fn encode_with_prefix<B>(tag: u32, $to_uint64_value: &$ty, amino_pre: &Vec<u8>, buf: &mut B) where B: BufMut {
+                panic!("amino prefix not implemented for type");
+            }
+
             pub fn merge<B>(wire_type: WireType, value: &mut $ty, buf: &mut B) -> Result<(), DecodeError> where B: Buf {
                 check_wire_type(WireType::Varint, wire_type)?;
                 let $from_uint64_value = decode_varint(buf)?;
@@ -436,6 +440,13 @@ macro_rules! fixed_width {
             pub fn encode<B>(tag: u32, value: &$ty, buf: &mut B) where B: BufMut {
                 encode_key(tag, $wire_type, buf);
                 buf.$put(*value);
+            }
+
+            pub fn encode_with_prefix<B>(tag: u32,
+                                         value: &$ty,
+                                         amino_prefix: &Vec<u8>,
+                                         buf: &mut B) where B: BufMut {
+                panic!("amino prefix not implemented for type");
             }
 
             pub fn merge<B>(wire_type: WireType, value: &mut $ty, buf: &mut B) -> Result<(), DecodeError> where B: Buf {
@@ -581,6 +592,14 @@ pub mod string {
         encode_varint(value.len() as u64, buf);
         buf.put_slice(value.as_bytes());
     }
+
+    pub fn encode_with_prefix<B>(tag: u32,
+                     value: &String,
+                     amino_prefix: Vec<u8>,
+                     buf: &mut B) where B: BufMut {
+        panic!("amino prefix not implemented for type");
+    }
+
     pub fn merge<B>(wire_type: WireType,
                     value: &mut String,
                     buf: &mut B) -> Result<(), DecodeError> where B: Buf {
@@ -605,6 +624,15 @@ pub mod bytes {
     pub fn encode<B>(tag: u32, value: &Vec<u8>, buf: &mut B) where B: BufMut {
         encode_key(tag, WireType::LengthDelimited, buf);
         encode_varint(value.len() as u64, buf);
+        buf.put_slice(value);
+    }
+
+    pub fn encode_with_prefix<B>(tag: u32,value: &Vec<u8>, amino_prefix: &Vec<u8>, buf: &mut B) where B: BufMut {
+        encode_key(tag, WireType::LengthDelimited, buf);
+        // length delim: the actual bytes + 4 prefix bytes + 1 additional length delim.
+        encode_varint((value.len()+amino_prefix.len()+1) as u64, buf);
+        buf.put_slice(amino_prefix);
+        encode_varint((value.len()) as u64, buf);
         buf.put_slice(value);
     }
 
@@ -643,6 +671,15 @@ pub mod message {
         encode_key(tag, WireType::LengthDelimited, buf);
         encode_varint(msg.encoded_len() as u64, buf);
         msg.encode_raw(buf);
+    }
+
+    pub fn encode_with_prefix<M, B>(tag: u32, msg: &M, amino_prefix: &Vec<u8>, buf: &mut B)
+        where M: Message,
+              B: BufMut {
+        encode_key(tag, WireType::LengthDelimited, buf);
+        encode_varint((msg.encoded_len()+amino_prefix.len()-1) as u64, buf);
+        buf.put(amino_prefix);
+        encode_varint((msg.encoded_len()-2) as u64, buf);
     }
 
     pub fn merge<M, B>(wire_type: WireType, msg: &mut M, buf: &mut B) -> Result<(), DecodeError>

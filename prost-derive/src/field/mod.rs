@@ -19,6 +19,8 @@ use syn::{
     NestedMeta,
 };
 
+use super::compute_disfix;
+
 #[derive(Clone)]
 pub enum Field {
     /// A scalar field.
@@ -315,6 +317,24 @@ fn tag_attr(attr: &Meta) -> Result<Option<u32>, Error> {
                                         .map_err(Error::from)
                                         .map(Option::Some),
                 Lit::Int(ref lit) => Ok(Some(lit.value() as u32)),
+                _ => bail!("invalid tag attribute: {:?}", attr),
+            }
+        },
+        _ => bail!("invalid tag attribute: {:?}", attr),
+    }
+}
+
+fn amino_name_attr(attr: &Meta) -> Result<Option<String>, Error> {
+    if attr.name() != "amino_name" {
+        return Ok(None);
+    }
+    match *attr {
+
+        Meta::NameValue(ref meta_name_value) => {
+            match meta_name_value.lit {
+                Lit::Str(ref lit) => {
+                    Ok(Some(lit.value()))
+                },
                 _ => bail!("invalid tag attribute: {:?}", attr),
             }
         },
