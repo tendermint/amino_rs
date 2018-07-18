@@ -318,7 +318,7 @@ macro_rules! varint {
                 encode_varint($to_uint64, buf);
             }
 
-            pub fn encode_with_prefix<B>(tag: u32, $to_uint64_value: &$ty, amino_pre: &Vec<u8>, buf: &mut B) where B: BufMut {
+            pub fn encode_with_prefix<B>(_tag: u32, $to_uint64_value: &$ty, _amino_pre: &Vec<u8>, _buf: &mut B) where B: BufMut {
                 panic!("amino prefix not implemented for type");
             }
 
@@ -442,10 +442,10 @@ macro_rules! fixed_width {
                 buf.$put(*value);
             }
 
-            pub fn encode_with_prefix<B>(tag: u32,
-                                         value: &$ty,
-                                         amino_prefix: &Vec<u8>,
-                                         buf: &mut B) where B: BufMut {
+            pub fn encode_with_prefix<B>(_tag: u32,
+                                         _value: &$ty,
+                                         _amino_prefix: &Vec<u8>,
+                                         _buf: &mut B) where B: BufMut {
                 panic!("amino prefix not implemented for type");
             }
 
@@ -593,10 +593,10 @@ pub mod string {
         buf.put_slice(value.as_bytes());
     }
 
-    pub fn encode_with_prefix<B>(tag: u32,
-                     value: &String,
-                     amino_prefix: Vec<u8>,
-                     buf: &mut B) where B: BufMut {
+    pub fn encode_with_prefix<B>(_tag: u32,
+                     _value: &String,
+                     _amino_prefix: Vec<u8>,
+                     _buf: &mut B) where B: BufMut {
         panic!("amino prefix not implemented for type");
     }
 
