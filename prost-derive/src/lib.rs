@@ -276,11 +276,16 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
                         _prost::encoding::encode_varint(len as u64, &mut tmp_buf);
                         buf.advance(len + tmp_buf.len());
                     }
-                    let (tag, wire_type) = _prost::encoding::decode_key(buf)?;
-                    match tag {
-                        #(#merge)*
-                        _ => _prost::encoding::skip_field(wire_type, buf),
+                    if buf.remaining() > 0 {
+                        let (tag, wire_type) = _prost::encoding::decode_key(buf)?;
+                        match tag {
+                            #(#merge)*
+                            _ => _prost::encoding::skip_field(wire_type, buf),
+                        }
+                    } else {
+                        Ok(())
                     }
+
                 }
 
                 #[inline]
