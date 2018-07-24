@@ -10,11 +10,6 @@ jobs:
       - restore_cache:
           key: cache-201804050 # bump save_cache key below too
       - run:
-          name: clippy
-          command: |
-            rustup run $RUST_NIGHTLY_VERSION cargo clippy --version
-            rustup run $RUST_NIGHTLY_VERSION cargo clippy --verbose --features=$CARGO_FEATURES
-      - run:
           name: build (nightly, all features)
           command: |
             rustup run $RUST_NIGHTLY_VERSION rustc --version --verbose
