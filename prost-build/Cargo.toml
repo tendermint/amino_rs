@@ -1,0 +1,36 @@
+[package]
+name = "prost-build"
+# NB: When modifying, also modify html_root_url in lib.rs
+version = "0.4.0"
+authors = ["Dan Burkert <dan@danburkert.com>"]
+license = "Apache-2.0"
+repository = "https://github.com/danburkert/prost"
+documentation = "https://docs.rs/prost-build"
+readme = "README.md"
+description = "A Protocol Buffers implementation for the Rust Language."
+
+[dependencies]
+bytes = "0.4.7"
+env_logger = { version = "0.5", default-features = false }
+heck = "0.3"
+itertools = "0.7"
+log = "0.4"
+multimap = { version = "0.4", default-features = false }
+petgraph = { version = "0.4", default-features = false }
+prost = { version = "0.4.0", path = ".." }
+prost-types = { version = "0.4.0", path = "../prost-types" }
+tempdir = "0.3"
+
+[build-dependencies]
+which = "2"
+
+[dev-dependencies]
+env_logger = { version = "0.5", default-features = false }
+
+[features]
+# docs.rs depends on an old version of cargo which doesn't support the rustc-env
+# directives used in build.rs. This feature provides a workaround.
+docs-rs = []
+
+[package.metadata.docs.rs]
+features = [ "docs-rs" ]
