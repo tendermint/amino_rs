@@ -10,11 +10,6 @@ jobs:
       - restore_cache:
           key: cache-201804050 # bump save_cache key below too
       - run:
-          name: rustfmt
-          command: |
-            rustup run $RUST_NIGHTLY_VERSION rustfmt --version
-            rustup run $RUST_NIGHTLY_VERSION cargo fmt -- --write-mode=diff
-      - run:
           name: clippy
           command: |
             rustup run $RUST_NIGHTLY_VERSION cargo clippy --version
