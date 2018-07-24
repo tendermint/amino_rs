@@ -318,6 +318,7 @@ macro_rules! varint {
                 encode_varint($to_uint64, buf);
             }
 
+            #[allow(unused_variables)]
             pub fn encode_with_prefix<B>(_tag: u32, $to_uint64_value: &$ty, _amino_pre: &Vec<u8>, _buf: &mut B) where B: BufMut {
                 panic!("amino prefix not implemented for type");
             }
@@ -657,6 +658,12 @@ pub mod bytes {
             buf.advance(len);
         }
         Ok(())
+    }
+
+    pub fn merge_with_prefix<B>(wire_type: WireType, value: &mut Vec<u8>, amino_prefix: &Vec<u8>, buf: &mut B) -> Result<(), DecodeError> where B: Buf {
+        // skip 4+1 bytes (or amino_prefix + length delimiter)
+        buf.advance(amino_prefix.len()+1);
+        merge(wire_type, value, buf)
     }
 
     length_delimited!(Vec<u8>);

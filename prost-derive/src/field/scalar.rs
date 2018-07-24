@@ -194,11 +194,25 @@ impl Field {
             Kind::Plain(..) | Kind::Optional(..) | Kind::Required(..) => quote!(merge),
             Kind::Repeated | Kind::Packed => quote!(merge_repeated),
         };
-        let merge_fn = quote!(_prost::encoding::#module::#merge_fn);
-
+        let is_registered = self.amino_prefix.len() > 0;
+        let decode_with_prefix = is_registered && module.to_string() == "bytes";
+        let merge_fn = if decode_with_prefix {
+            quote!(_prost::encoding::#module::merge_with_prefix)
+        } else {
+            quote!(_prost::encoding::#module::#merge_fn)
+        };
+        let pre = &self.amino_prefix;
         match self.kind {
-            Kind::Plain(..) | Kind::Required(..) | Kind::Repeated | Kind::Packed => quote! {
-                #merge_fn(wire_type, &mut #ident, buf)
+            Kind::Plain(..) | Kind::Required(..) | Kind::Repeated | Kind::Packed => {
+                if decode_with_prefix {
+                    quote! {
+                        #merge_fn(wire_type, &mut #ident, &vec![#(#pre),*], buf)
+                    }
+                } else {
+                    quote! {
+                        #merge_fn(wire_type, &mut #ident, buf)
+                    }
+                }
             },
             Kind::Optional(..) => quote! {
                 #merge_fn(wire_type,
