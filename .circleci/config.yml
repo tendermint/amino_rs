@@ -3,7 +3,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: iqlusion/rust-ci:201804050 # bump cache keys when modifying this
+      - image: iqlusion/rust-ci:20180729.2 # bump cache keys when modifying this
     environment:
     steps:
       - checkout
@@ -22,7 +22,7 @@ jobs:
             rustup run $RUST_NIGHTLY_VERSION cargo --version --verbose
             rustup run $RUST_NIGHTLY_VERSION cargo test --features=$CARGO_FEATURES
       - save_cache:
-          key: cache-201804050 # bump restore_cache key above too
+          key: cache-20180729.2 # bump restore_cache key above too
           paths:
             - "~/.cargo"
             - "./target"
