@@ -1,11 +1,11 @@
 # Rust Amino
 
 This is a work in progress implementation of the Amino serialization for Tendermint/Cosmos in the Rust Language. 
-For details on amino, see: https://github.com/tendermint/go-amino\.
+For details on amino, see: https://github.com/tendermint/go-amino.
 
-It is based on the Protocol Buffers implementation [prost!](https://github.com/danburkert/prost) by @danburkert.
+It is based on the Protocol Buffers implementation [prost!](https://github.com/danburkert/prost) by [@danburkert](https://github.com/danburkert).
 
-Like prost! for protobuf, it uses Rust's type-directed metaprogramming to add rudimentary support for amino's 
+Like prost! for protobuf, it uses Rust's type-directed metaprogramming to add support for amino's 
 [registered types](https://github.com/tendermint/go-amino/#registering-types). 
 
 [Registered types](https://github.com/tendermint/go-amino/#registering-types) can be annotated via 
