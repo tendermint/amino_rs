@@ -1,0 +1,30 @@
+[package]
+name = "tests"
+version = "0.0.0"
+authors = ["Dan Burkert <dan@danburkert.com>"]
+publish = false
+
+# Cargo treats the tests/ directory as an integration-tests folder[1], so to
+# avoid Cargo executing the build.rs as an integration test, move it into a
+# subdirectory.
+# [1]: http://doc.crates.io/manifest.html#integration-tests
+build = "src/build.rs"
+
+[lib]
+doctest = false
+
+[dependencies]
+bytes = "0.4.7"
+prost-amino = { path = ".." }
+prost-derive = { path = "../prost-derive" }
+prost-types = { path = "../prost-types" }
+
+[dev-dependencies]
+diff = "0.1"
+prost-build = { path = "../prost-build" }
+tempdir = "0.3"
+
+[build-dependencies]
+env_logger = { version = "0.5", default-features = false }
+prost-build = { path = "../prost-build" }
+protobuf = { path = "../protobuf" }

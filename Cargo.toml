@@ -1,12 +1,38 @@
 [package]
-name = "amino"
-version = "0.1.0"
-authors = ["zaki", "Ismail Khoffi <ismail@tendermint.com"]
+name = "prost-amino"
+# NB: When modifying, also modify html_root_url in lib.rs
+version = "0.4.0"
+authors = ["Dan Burkert <dan@danburkert.com>", "zaki", "Ismail Khoffi <ismail@tendermint.com"]
+license = "Apache-2.0"
+repository = "https://github.com/tendermint/amino_rs"
+documentation = "https://docs.rs/prost"
+readme = "README.md"
+description = "An implementation of the Amino serialization for Tendermint/Cosmos in the Rust Language. See https://github.com/tendermint/go-amino for details."
+keywords = ["protobuf", "serialization"]
+categories = ["encoding"]
 
+[workspace]
+members = [
+  "benchmarks",
+  "conformance",
+  "prost-build",
+  "prost-derive",
+  "prost-types",
+  "protobuf",
+  "tests",
+]
+exclude = [
+  # The fuzz crate can't be compiled or tested without the 'cargo fuzz' command,
+  # so exclude it from normal builds.
+  "fuzz",
+]
 
 [dependencies]
-amino-derive = { path = "amino-derive" }
 byteorder = "1"
-bytes = "0.4"
-chrono = "0.4.2"
-sha2 = "0.7"
+bytes = "0.4.7"
+
+[dev-dependencies]
+env_logger = { version = "0.5", default-features = false }
+log = "0.4"
+prost-derive = { version = "0.4.0", path = "prost-derive" }
+quickcheck = "0.6"
