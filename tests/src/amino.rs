@@ -1,5 +1,5 @@
 
-extern crate prost;
+extern crate prost_amino as prost;
 use prost::Message;
 
 

@@ -1,7 +1,7 @@
 #![feature(test)]
 
 extern crate bytes;
-extern crate prost;
+extern crate prost_amino as prost;
 extern crate test;
 
 #[macro_use]

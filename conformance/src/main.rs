@@ -1,6 +1,6 @@
 extern crate bytes;
 extern crate env_logger;
-extern crate prost;
+extern crate prost_amino as prost;
 extern crate tests;
 
 #[macro_use]
