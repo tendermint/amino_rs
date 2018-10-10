@@ -169,8 +169,7 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
         .map(|&(ref field_ident, ref field)| {
             field.encoded_len(quote!(self.#field_ident))
         });
-
-    let (encoded_len2, encoded_len3) = (encoded_len.clone(), encoded_len.clone());
+    let encoded_len2 = encoded_len.clone();
 
     let encode = fields.iter()
         .map(|&(ref field_ident, ref field)| {
@@ -269,12 +268,10 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
                 where B: _bytes::Buf {
                     #struct_name
                     if #is_registered {
-                        // skip some bytes: varint(total_len) || prefix_bytes:
-                        let mut tmp_buf = vec![];
-                        // prefix + total_encoded_len:
-                        let len = 4 #(+ #encoded_len3)*;
-                        _prost::encoding::encode_varint(len as u64, &mut tmp_buf);
-                        buf.advance(len + tmp_buf.len());
+                        // skip some bytes: varint(total_len) || prefix_bytes
+                        // prefix (4) + total_encoded_len:
+                        let _full_len = _prost::encoding::decode_varint(buf)?;
+                        buf.advance(4);
                     }
                     if buf.remaining() > 0 {
                         let (tag, wire_type) = _prost::encoding::decode_key(buf)?;
