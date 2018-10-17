@@ -21,7 +21,7 @@
 //! [dependencies]
 //! bytes = <bytes-version>
 //! prost = <prost-version>
-//! prost-derive = <prost-version>
+//! prost-amino-derive = <prost-version>
 //!
 //! [build-dependencies]
 //! prost-build = <prost-version>
