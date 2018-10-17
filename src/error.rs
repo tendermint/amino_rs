@@ -7,7 +7,7 @@ use std::io;
 
 /// A Protobuf message decoding error.
 ///
-/// `DecodeError` indicates that the input buffer does not caontain a valid
+/// `DecodeError` indicates that the input buffer does not contain a valid
 /// Protobuf message. The error details should be considered 'best effort': in
 /// general it is not possible to exactly pinpoint why data is malformed.
 #[derive(Clone, Debug, PartialEq, Eq)]

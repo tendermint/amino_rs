@@ -243,7 +243,7 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
     let expanded = quote! {
         #[allow(non_snake_case, unused_attributes)]
         mod #module {
-            extern crate prost as _prost;
+            extern crate prost_amino as _prost;
             extern crate bytes as _bytes;
 
             use super::*;
@@ -501,7 +501,7 @@ fn try_oneof(input: TokenStream) -> Result<TokenStream, Error> {
         #[allow(non_snake_case, unused_attributes)]
         mod #module {
             extern crate bytes as _bytes;
-            extern crate prost as _prost;
+            extern crate prost_amino as _prost;
             use super::*;
 
             impl #ident {

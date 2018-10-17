@@ -62,7 +62,7 @@
 //! And finally, in `lib.rs`, include the generated code:
 //!
 //! ```rust,ignore
-//! extern crate prost;
+//! extern crate prost_amino;
 //! #[macro_use]
 //! extern crate prost_derive;
 //!
@@ -115,7 +115,7 @@ extern crate heck;
 extern crate itertools;
 extern crate multimap;
 extern crate petgraph;
-extern crate prost;
+extern crate prost_amino as prost;
 extern crate prost_types;
 extern crate tempdir;
 
