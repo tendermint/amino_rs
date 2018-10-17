@@ -16,7 +16,7 @@ members = [
   "benchmarks",
   "conformance",
   "prost-build",
-  "prost-derive",
+  "prost-amino-derive",
   "prost-types",
   "protobuf",
   "tests",
@@ -34,5 +34,5 @@ bytes = "0.4.7"
 [dev-dependencies]
 env_logger = { version = "0.5", default-features = false }
 log = "0.4"
-prost-derive = { version = "0.4.0", path = "prost-derive" }
+prost-amino-derive = { version = "0.4.0", path = "prost-amino-derive" }
 quickcheck = "0.6"

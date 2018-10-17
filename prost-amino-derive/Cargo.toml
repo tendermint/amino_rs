@@ -1,13 +1,13 @@
 [package]
-name = "prost-derive"
+name = "prost-amino-derive"
 # NB: When modifying, also modify html_root_url in lib.rs
 version = "0.4.0"
-authors = ["Dan Burkert <dan@danburkert.com>"]
+authors = ["Dan Burkert <dan@danburkert.com>", "Ismail Khoffi <Ismail.Khoffi@gmail.com>"]
 license = "Apache-2.0"
 repository = "https://github.com/danburkert/prost"
 documentation = "https://docs.rs/prost-derive"
 readme = "README.md"
-description = "A Protocol Buffers implementation for the Rust Language."
+description = "A Protocol Buffers implementation for the Rust Language modified to enable amino (de)serialization."
 
 [lib]
 proc_macro = true
@@ -20,4 +20,3 @@ quote = "0.6.3"
 syn = { version = "0.14.1", features = [ "extra-traits" ] }
 sha2 = "0.7"
 digest ="0.7"
-

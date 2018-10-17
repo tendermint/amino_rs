@@ -16,4 +16,4 @@ test = false
 [dependencies]
 bytes = "0.4.7"
 prost-amino = { version = "0.4.0", path = ".." }
-prost-derive = { version = "0.4.0", path = "../prost-derive" }
+prost-amino-derive = { version = "0.4.0", path = "../prost-amino-derive" }

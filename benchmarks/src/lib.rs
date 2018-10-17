@@ -5,7 +5,7 @@ extern crate prost_amino as prost;
 extern crate test;
 
 #[macro_use]
-extern crate prost_derive;
+extern crate prost_amino_derive;
 
 mod varint;
 

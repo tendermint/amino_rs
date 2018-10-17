@@ -4,7 +4,7 @@ extern crate prost_amino as prost;
 extern crate tests;
 
 #[macro_use]
-extern crate prost_derive;
+extern crate prost_amino_derive;
 
 include!(concat!(env!("OUT_DIR"), "/conformance.rs"));
 

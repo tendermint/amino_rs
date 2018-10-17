@@ -3,9 +3,9 @@
 
 # prost-derive
 
-`prost-derive` handles generating encoding and decoding implementations for Rust
+`prost-amino-derive` handles generating encoding and decoding implementations for Rust
 types annotated with `prost` annotation. For the most part, users of `prost`
-shouldn't need to interact with `prost-derive` directly.
+shouldn't need to interact with `prost-amino-derive` directly.
 
 ## License
 

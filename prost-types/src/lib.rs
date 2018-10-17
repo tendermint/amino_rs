@@ -10,7 +10,7 @@
 //! [1]: https://developers.google.com/protocol-buffers/docs/reference/google.protobuf
 
 #[macro_use]
-extern crate prost_derive;
+extern crate prost_amino_derive;
 
 use std::i32;
 use std::i64;
