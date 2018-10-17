@@ -2,7 +2,7 @@ extern crate bytes;
 extern crate prost_amino;
 extern crate prost_types;
 
-#[macro_use] extern crate prost_derive;
+#[macro_use] extern crate prost_amino_derive;
 
 #[cfg(test)] extern crate tempdir;
 #[cfg(test)] extern crate prost_build;

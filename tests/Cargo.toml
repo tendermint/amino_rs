@@ -16,7 +16,7 @@ doctest = false
 [dependencies]
 bytes = "0.4.7"
 prost-amino = { path = ".." }
-prost-derive = { path = "../prost-derive" }
+prost-amino-derive = { path = "../prost-amino-derive" }
 prost-types = { path = "../prost-types" }
 
 [dev-dependencies]
