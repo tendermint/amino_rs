@@ -322,7 +322,7 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
     Ok(expanded.into())
 }
 
-#[proc_macro_derive(Message, attributes(prost, amino_name, aminoDisamb))]
+#[proc_macro_derive(Message, attributes(prost_amino, amino_name, aminoDisamb))]
 pub fn message(input: TokenStream) -> TokenStream {
     try_message(input).unwrap()
 }
@@ -412,7 +412,7 @@ fn try_enumeration(input: TokenStream) -> Result<TokenStream, Error> {
     Ok(expanded.into())
 }
 
-#[proc_macro_derive(Enumeration, attributes(prost))]
+#[proc_macro_derive(Enumeration, attributes(prost_amino))]
 pub fn enumeration(input: TokenStream) -> TokenStream {
     try_enumeration(input).unwrap()
 }
@@ -544,7 +544,7 @@ fn try_oneof(input: TokenStream) -> Result<TokenStream, Error> {
     Ok(expanded.into())
 }
 
-#[proc_macro_derive(Oneof, attributes(prost))]
+#[proc_macro_derive(Oneof, attributes(prost_amino))]
 pub fn oneof(input: TokenStream) -> TokenStream {
     try_oneof(input).unwrap()
 }
