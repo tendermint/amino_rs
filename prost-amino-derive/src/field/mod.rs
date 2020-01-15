@@ -229,7 +229,7 @@ impl fmt::Display for Label {
 /// Get the items belonging to the 'prost' list attribute, e.g. `#[prost(foo, bar="baz")]`.
 fn prost_attrs(attrs: Vec<Attribute>) -> Result<Vec<Meta>, Error> {
     Ok(attrs.iter().flat_map(Attribute::interpret_meta).flat_map(|meta| match meta {
-        Meta::List(MetaList { ident, nested, .. }) => if ident == "prost" {
+        Meta::List(MetaList { ident, nested, .. }) => if ident == "prost_amino" {
             nested.into_iter().collect()
         } else {
             Vec::new()
@@ -238,7 +238,7 @@ fn prost_attrs(attrs: Vec<Attribute>) -> Result<Vec<Meta>, Error> {
     }).flat_map(|attr| -> Result<_, _> {
         match attr {
             NestedMeta::Meta(attr) => Ok(attr),
-            NestedMeta::Literal(lit) => bail!("invalid prost attribute: {:?}", lit),
+            NestedMeta::Literal(lit) => bail!("invalid prost_amino attribute: {:?}", lit),
         }
     }).collect())
 }
