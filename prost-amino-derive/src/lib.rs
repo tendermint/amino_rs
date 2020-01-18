@@ -272,7 +272,7 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
 
                 #[allow(unused_variables)]
                 fn merge_field<B>(&mut self, buf: &mut B) -> ::std::result::Result<(), _prost::DecodeError>
-                where B: _bytes::Buf {
+                where B: _bytes::BufMut {
                     #struct_name
                     if #is_registered {
                         // skip some bytes: varint(total_len) || prefix_bytes
@@ -549,7 +549,7 @@ fn try_oneof(input: TokenStream) -> Result<TokenStream, Error> {
                                 wire_type: _prost::encoding::WireType,
                                 buf: &mut B)
                                 -> ::std::result::Result<(), _prost::DecodeError>
-                where B: _bytes::Buf {
+                where B: _bytes::BufMut {
                     match tag {
                         #(#merge,)*
                         _ => unreachable!(concat!("invalid ", stringify!(#ident), " tag: {}"), tag),
