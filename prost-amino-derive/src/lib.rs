@@ -532,12 +532,11 @@ fn try_oneof(input: TokenStream) -> Result<TokenStream, Error> {
     let expanded = quote! {
         #[allow(non_snake_case, unused_attributes)]
         mod #module {
-            extern crate bytes as _bytes;
             extern crate prost_amino as _prost;
             use super::*;
 
             impl #ident {
-                pub fn encode<B>(&self, buf: &mut B) where B: _bytes::BufMut {
+                pub fn encode<B>(&self, buf: &mut B) where B: _prost::bytes::BufMut {
                     match *self {
                         #(#encode,)*
                     }
