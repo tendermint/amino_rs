@@ -17,8 +17,7 @@ pub use message::Message;
 pub use error::{DecodeError, EncodeError};
 
 use bytes::{
-    BufMut,
-    IntoBuf,
+    BufMut, Buf
 };
 
 use encoding::{
@@ -63,8 +62,7 @@ pub fn length_delimiter_len(length: usize) -> usize {
 ///    input is required to decode the full delimiter.
 ///  * If the supplied buffer contains more than 10 bytes, then the buffer contains an invalid
 ///    delimiter, and typically the buffer should be considered corrupt.
-pub fn decode_length_delimiter<B>(buf: B) -> Result<usize, DecodeError> where B: IntoBuf {
-    let mut buf = buf.into_buf();
+pub fn decode_length_delimiter<B>(mut buf: B) -> Result<usize, DecodeError> where B: Buf {
     let length = decode_varint(&mut buf)?;
     if length > usize::max_value() as u64 {
         return Err(DecodeError::new("length delimiter exceeds maximum usize value"));

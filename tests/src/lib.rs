@@ -66,7 +66,7 @@ pub mod oneof_attributes {
 
 use std::error::Error;
 
-use bytes::{Buf, IntoBuf};
+use bytes::Buf;
 
 use prost::Message;
 
@@ -157,7 +157,6 @@ pub fn check_message<M>(msg: &M) where M: Message + Default + PartialEq {
     msg.encode(&mut buf).unwrap();
     assert_eq!(expected_len, buf.len());
 
-    let mut buf = buf.into_buf();
     let roundtrip = M::decode(&mut buf).unwrap();
 
     if buf.has_remaining() {

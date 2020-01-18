@@ -9,7 +9,7 @@ doctest = false
 test = false
 
 [dependencies]
-bytes = "0.4.7"
+bytes = "0.5"
 prost-amino = { path = ".." }
 prost-amino-derive = { path = "../prost-amino-derive" }
 

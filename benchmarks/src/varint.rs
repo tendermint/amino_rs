@@ -1,6 +1,5 @@
 use test;
 
-use bytes::IntoBuf;
 
 use prost::encoding::{
     decode_varint,

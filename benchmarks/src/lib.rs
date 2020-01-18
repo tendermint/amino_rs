@@ -9,7 +9,6 @@ extern crate prost_amino_derive;
 
 mod varint;
 
-use bytes::IntoBuf;
 use prost::Message;
 
 pub fn bench_message_encode<M>(b: &mut test::Bencher, message: &M) where M: Message  {
@@ -46,7 +45,6 @@ pub fn bench_message_decode<M>(b: &mut test::Bencher, bytes: &[u8]) where M: Mes
 pub const GOOGLE_MESSAGE1: &'static [u8] = include_bytes!(env!("GOOGLE_MESSAGE1"));
 
 pub mod proto2 {
-    use bytes::IntoBuf;
     use prost::Message;
     use test;
 
@@ -73,7 +71,6 @@ pub mod proto2 {
 }
 
 pub mod proto3 {
-    use bytes::IntoBuf;
     use prost::Message;
     use test;
 

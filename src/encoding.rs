@@ -6,6 +6,7 @@ use std::cmp::min;
 use std::str;
 use std::u32;
 use std::usize;
+use std::mem;
 
 use bytes::{
     Buf,
@@ -18,11 +19,11 @@ use Message;
 /// Encodes an integer value into LEB128 variable length format, and writes it to the buffer.
 /// The buffer must have enough remaining space (maximum 10 bytes).
 #[inline]
-pub fn encode_varint<B>(mut value: u64, buf: &mut B) where B: BufMut {
+pub fn encode_varint<B>(mut value: u64, buf: &mut B)
+where
+    B: BufMut,
+{
     // Safety notes:
-    //
-    // - bytes_mut is unsafe because it may return an uninitialized slice.
-    //   The use here is safe because the slice is only written to, never read from.
     //
     // - advance_mut is unsafe because it could cause uninitialized memory to be
     //   advanced over. The use here is safe since each byte which is advanced over
@@ -31,24 +32,27 @@ pub fn encode_varint<B>(mut value: u64, buf: &mut B) where B: BufMut {
     'outer: loop {
         i = 0;
 
-        for byte in unsafe { buf.bytes_mut() } {
+        for byte in buf.bytes_mut() {
             i += 1;
             if value < 0x80 {
-                *byte = value as u8;
+                *byte = mem::MaybeUninit::new(value as u8);
                 break 'outer;
             } else {
-                *byte = ((value & 0x7F) | 0x80) as u8;
+                *byte = mem::MaybeUninit::new(((value & 0x7F) | 0x80) as u8);
                 value >>= 7;
             }
         }
 
-        unsafe { buf.advance_mut(i); }
+        unsafe {
+            buf.advance_mut(i);
+        }
         debug_assert!(buf.has_remaining_mut());
     }
 
-    unsafe { buf.advance_mut(i); }
+    unsafe {
+        buf.advance_mut(i);
+    }
 }
-
 /// Decodes a LEB128-encoded variable length integer from the buffer.
 pub fn decode_varint<B>(buf: &mut B) -> Result<u64, DecodeError> where B: Buf {
     // NLL hack.
@@ -685,7 +689,7 @@ pub mod message {
               B: BufMut {
         encode_key(tag, WireType::LengthDelimited, buf);
         encode_varint((msg.encoded_len()+amino_prefix.len()-1) as u64, buf);
-        buf.put(amino_prefix);
+        buf.put(amino_prefix.as_ref());
         encode_varint((msg.encoded_len()-2) as u64, buf);
     }
 
@@ -888,10 +892,9 @@ pub mod btree_map {
 mod test {
     use std::borrow::Borrow;
     use std::fmt::Debug;
-    use std::io::Cursor;
     use std::u64;
 
-    use bytes::{Bytes, BytesMut, IntoBuf};
+    use bytes::{Bytes, BytesMut};
     use quickcheck::TestResult;
 
     use ::encoding::*;
@@ -900,7 +903,7 @@ mod test {
                             tag: u32,
                             wire_type: WireType,
                             encode: fn(u32, &B, &mut BytesMut),
-                            merge: fn(WireType, &mut T, &mut Cursor<Bytes>) -> Result<(), DecodeError>,
+                            merge: fn(WireType, &mut T, &mut Bytes) -> Result<(), DecodeError>,
                             encoded_len: fn(u32, &B) -> usize)
                             -> TestResult
     where T: Debug + Default + PartialEq + Borrow<B>,
@@ -915,7 +918,7 @@ mod test {
         let mut buf = BytesMut::with_capacity(expected_len);
         encode(tag, value.borrow(), &mut buf);
 
-        let mut buf = buf.freeze().into_buf();
+        let mut buf = buf.freeze();
 
         if buf.remaining() != expected_len {
             return TestResult::error(format!("encoded_len wrong; expected: {}, actual: {}",
@@ -985,7 +988,7 @@ mod test {
     where T: Debug + Default + PartialEq + Borrow<B>,
           B: ?Sized,
           E: FnOnce(u32, &B, &mut BytesMut),
-          M: FnMut(WireType, &mut T, &mut Cursor<Bytes>) -> Result<(), DecodeError>,
+          M: FnMut(WireType, &mut T, &mut Bytes) -> Result<(), DecodeError>,
           L: FnOnce(u32, &B) -> usize {
 
         if tag > MAX_TAG || tag < MIN_TAG {
@@ -997,7 +1000,7 @@ mod test {
         let mut buf = BytesMut::with_capacity(expected_len);
         encode(tag, value.borrow(), &mut buf);
 
-        let mut buf = buf.freeze().into_buf();
+        let mut buf = buf.freeze();
 
         if buf.remaining() != expected_len {
             return TestResult::error(format!("encoded_len wrong; expected: {}, actual: {}",
@@ -1038,7 +1041,7 @@ mod test {
 
     #[test]
     fn varint() {
-        fn check(value: u64, encoded: &[u8]) {
+        fn check(value: u64, mut encoded: &[u8]) {
             // Small buffer.
             let mut buf = Vec::with_capacity(1);
             encode_varint(value, &mut buf);
@@ -1051,10 +1054,10 @@ mod test {
 
             assert_eq!(encoded_len_varint(value), encoded.len());
 
-            let roundtrip_value = decode_varint(&mut encoded.into_buf()).expect("decoding failed");
+            let roundtrip_value = decode_varint(&mut encoded).expect("decoding failed");
             assert_eq!(value, roundtrip_value);
 
-            let roundtrip_value = decode_varint_slow(&mut encoded.into_buf()).expect("slow decoding failed");
+            let roundtrip_value = decode_varint_slow(&mut encoded).expect("slow decoding failed");
             assert_eq!(value, roundtrip_value);
         }
 
