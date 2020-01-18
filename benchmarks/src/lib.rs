@@ -12,7 +12,10 @@ mod varint;
 use bytes::IntoBuf;
 use prost::Message;
 
-pub fn bench_message_encode<M>(b: &mut test::Bencher, message: &M) where M: Message  {
+pub fn bench_message_encode<M>(b: &mut test::Bencher, message: &M)
+where
+    M: Message,
+{
     let encoded_len = message.encoded_len();
     let mut buf = Vec::with_capacity(encoded_len);
     b.iter(|| {
@@ -23,7 +26,10 @@ pub fn bench_message_encode<M>(b: &mut test::Bencher, message: &M) where M: Mess
     b.bytes = encoded_len as u64;
 }
 
-pub fn bench_message_encode_raw<M>(b: &mut test::Bencher, message: &M) where M: Message  {
+pub fn bench_message_encode_raw<M>(b: &mut test::Bencher, message: &M)
+where
+    M: Message,
+{
     let encoded_len = message.encoded_len();
     let mut buf = Vec::with_capacity(encoded_len);
     b.iter(|| {
@@ -34,7 +40,10 @@ pub fn bench_message_encode_raw<M>(b: &mut test::Bencher, message: &M) where M: 
     b.bytes = encoded_len as u64;
 }
 
-pub fn bench_message_decode<M>(b: &mut test::Bencher, bytes: &[u8]) where M: Message + Default {
+pub fn bench_message_decode<M>(b: &mut test::Bencher, bytes: &[u8])
+where
+    M: Message + Default,
+{
     b.iter(|| {
         test::black_box(M::decode(bytes.into_buf()).unwrap());
     });

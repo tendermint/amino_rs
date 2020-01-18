@@ -2,14 +2,7 @@ use failure::Error;
 use proc_macro2::TokenStream;
 use syn::Meta;
 
-use field::{
-    word_attr,
-    tag_attr,
-    set_option,
-    set_bool,
-    amino_name_attr,
-    Label,
-};
+use field::{amino_name_attr, set_bool, set_option, tag_attr, word_attr, Label};
 
 use super::compute_disfix;
 
@@ -53,7 +46,10 @@ impl Field {
 
         match unknown_attrs.len() {
             0 => (),
-            1 => bail!("unknown attribute for message field: {:?}", unknown_attrs[0]),
+            1 => bail!(
+                "unknown attribute for message field: {:?}",
+                unknown_attrs[0]
+            ),
             _ => bail!("unknown attributes for message field: {:?}", unknown_attrs),
         }
 
