@@ -7,10 +7,12 @@
 
 use bytes::{Buf, BufMut};
 
-use encoding::*;
-use DecodeError;
-use Message;
-
+use crate::{
+    encoding::{
+        bool, bytes, decode_key, double, float, int32, int64, skip_field, string, uint32, uint64,
+    },
+    DecodeError, Message,
+};
 /// `google.protobuf.BoolValue`
 impl Message for bool {
     fn encode_raw<B>(&self, buf: &mut B)

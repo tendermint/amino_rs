@@ -16,6 +16,11 @@ pub mod encoding;
 pub use error::{DecodeError, EncodeError};
 pub use message::Message;
 
+#[cfg(feature = "prost-derive")]
+#[doc(hidden)]
+#[doc(hidden)]
+pub use bytes;
+
 use bytes::{Buf, BufMut};
 
 use encoding::{decode_varint, encode_varint, encoded_len_varint};

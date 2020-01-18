@@ -3,6 +3,7 @@
 //! Meant to be used only from `Message` implementations.
 
 use std::cmp::min;
+use std::mem;
 use std::str;
 use std::u32;
 use std::usize;
@@ -15,14 +16,12 @@ use Message;
 /// Encodes an integer value into LEB128 variable length format, and writes it to the buffer.
 /// The buffer must have enough remaining space (maximum 10 bytes).
 #[inline]
+#[inline]
 pub fn encode_varint<B>(mut value: u64, buf: &mut B)
 where
     B: BufMut,
 {
     // Safety notes:
-    //
-    // - bytes_mut is unsafe because it may return an uninitialized slice.
-    //   The use here is safe because the slice is only written to, never read from.
     //
     // - advance_mut is unsafe because it could cause uninitialized memory to be
     //   advanced over. The use here is safe since each byte which is advanced over
@@ -31,16 +30,14 @@ where
     'outer: loop {
         i = 0;
 
-        unsafe {
-            for byte in buf.bytes_mut() {
-                i += 1;
-                if value < 0x80 {
-                    *byte.as_mut_ptr() = value as u8;
-                    break 'outer;
-                } else {
-                    *byte.as_mut_ptr() = ((value & 0x7F) | 0x80) as u8;
-                    value >>= 7;
-                }
+        for byte in buf.bytes_mut() {
+            i += 1;
+            if value < 0x80 {
+                *byte = mem::MaybeUninit::new(value as u8);
+                break 'outer;
+            } else {
+                *byte = mem::MaybeUninit::new(((value & 0x7F) | 0x80) as u8);
+                value >>= 7;
             }
         }
 
