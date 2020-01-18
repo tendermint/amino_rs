@@ -244,13 +244,12 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
         #[allow(non_snake_case, unused_attributes)]
         mod #module {
             extern crate prost_amino as _prost;
-            extern crate bytes as _bytes;
 
             use super::*;
 
             impl _prost::Message for #ident {
                 #[allow(unused_variables)]
-                fn encode_raw<B>(&self, buf: &mut B) where B: _bytes::BufMut {
+                fn encode_raw<B>(&self, buf: &mut B) where B: ::_prost::bytes::BufMut  {
                     if #is_registered {
                         // TODO: in go-amino this only get length-prefixed if MarhsalBinary is used
                         // opposed to MarshalBinaryBare
@@ -265,7 +264,7 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
 
                 #[allow(unused_variables)]
                 fn merge_field<B>(&mut self, buf: &mut B) -> ::std::result::Result<(), _prost::DecodeError>
-                where B: _bytes::Buf {
+                where B: ::_prost::bytes::Buf {
                     #struct_name
                     if #is_registered {
                         // skip some bytes: varint(total_len) || prefix_bytes
@@ -500,12 +499,11 @@ fn try_oneof(input: TokenStream) -> Result<TokenStream, Error> {
     let expanded = quote! {
         #[allow(non_snake_case, unused_attributes)]
         mod #module {
-            extern crate bytes as _bytes;
             extern crate prost_amino as _prost;
             use super::*;
 
             impl #ident {
-                pub fn encode<B>(&self, buf: &mut B) where B: _bytes::BufMut {
+                pub fn encode<B>(&self, buf: &mut B) where B: ::_prost::bytes::BufMut {
                     match *self {
                         #(#encode,)*
                     }
@@ -516,7 +514,7 @@ fn try_oneof(input: TokenStream) -> Result<TokenStream, Error> {
                                 wire_type: _prost::encoding::WireType,
                                 buf: &mut B)
                                 -> ::std::result::Result<(), _prost::DecodeError>
-                where B: _bytes::Buf {
+                where B: ::_prost::bytes::Buf {
                     match tag {
                         #(#merge,)*
                         _ => unreachable!(concat!("invalid ", stringify!(#ident), " tag: {}"), tag),

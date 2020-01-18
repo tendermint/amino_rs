@@ -2,6 +2,10 @@
 
 extern crate bytes;
 
+#[cfg(feature = "prost-derive")]
+#[doc(hidden)]	#[doc(hidden)]
+pub use bytes;
+
 #[cfg(test)]
 #[macro_use]
 extern crate quickcheck;
@@ -25,6 +29,8 @@ use encoding::{
     encode_varint,
     encoded_len_varint,
 };
+
+
 
 /// Encodes a length delimiter to the buffer.
 ///
