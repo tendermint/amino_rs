@@ -1,6 +1,7 @@
 #![doc(html_root_url = "https://docs.rs/prost/0.4.0")]
 
-pub extern crate bytes;
+extern crate bytes;
+
 #[cfg(feature = "prost-derive")]
 #[doc(hidden)]
 #[doc(hidden)]
