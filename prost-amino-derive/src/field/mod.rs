@@ -219,7 +219,7 @@ fn prost_attrs(attrs: Vec<Attribute>) -> Result<Vec<Meta>, Error> {
         .flat_map(Attribute::interpret_meta)
         .flat_map(|meta| match meta {
             Meta::List(MetaList { ident, nested, .. }) => {
-                if ident == "prost" {
+                if ident == "prost_amino" {
                     nested.into_iter().collect()
                 } else {
                     Vec::new()
