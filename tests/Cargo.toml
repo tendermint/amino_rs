@@ -14,7 +14,7 @@ build = "src/build.rs"
 doctest = false
 
 [dependencies]
-bytes = "0.4.7"
+bytes = "0.5"
 prost-amino = { path = ".." }
 prost-amino-derive = { path = "../prost-amino-derive" }
 prost-types = { path = "../prost-types" }
