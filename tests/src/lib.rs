@@ -1,4 +1,4 @@
-extern crate bytes;
+pub extern crate bytes;
 extern crate prost_amino;
 extern crate prost_types;
 
