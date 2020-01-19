@@ -55,32 +55,24 @@ pub fn decode_varint<B>(buf: &mut B) -> Result<u64, DecodeError>
 where
     B: Buf,
 {
-    // NLL hack.
-    'slow: loop {
-        // Another NLL hack.
-        let (value, advance) = {
-            let bytes = buf.bytes();
-            let len = bytes.len();
-            if len == 0 {
-                return Err(DecodeError::new("invalid varint"));
-            }
-
-            let byte = bytes[0];
-            if byte < 0x80 {
-                (u64::from(byte), 1)
-            } else if len > 10 || bytes[len - 1] < 0x80 {
-                decode_varint_slice(bytes)?
-            } else {
-                break 'slow;
-            }
-        };
-
-        buf.advance(advance);
-        return Ok(value);
+    let bytes = buf.bytes();
+    let len = bytes.len();
+    if len == 0 {
+        return Err(DecodeError::new("invalid varint"));
     }
-    decode_varint_slow(buf)
-}
 
+    let byte = unsafe { *bytes.get_unchecked(0) };
+    if byte < 0x80 {
+        buf.advance(1);
+        Ok(u64::from(byte))
+    } else if len > 10 || bytes[len - 1] < 0x80 {
+        let (value, advance) =  decode_varint_slice(bytes)?;
+        buf.advance(advance);
+        Ok(value)
+    } else {
+        decode_varint_slow(buf)
+    }
+}
 /// Decodes a LEB128-encoded variable length integer from the slice, returning the value and the
 /// number of bytes read.
 ///
@@ -1271,7 +1263,7 @@ mod test {
 
     #[test]
     fn varint() {
-        fn check(value: u64, mut encoded: &[u8]) {
+        fn check(value: u64, encoded: &[u8]) {
             // Small buffer.
             let mut buf = Vec::with_capacity(1);
             encode_varint(value, &mut buf);
@@ -1284,10 +1276,10 @@ mod test {
 
             assert_eq!(encoded_len_varint(value), encoded.len());
 
-            let roundtrip_value = decode_varint(&mut encoded).expect("decoding failed");
+            let roundtrip_value = decode_varint(&mut encoded.clone()).expect("decoding failed");
             assert_eq!(value, roundtrip_value);
 
-            let roundtrip_value = decode_varint_slow(&mut encoded).expect("slow decoding failed");
+            let roundtrip_value = decode_varint_slow(&mut encoded.clone()).expect("slow decoding failed");
             assert_eq!(value, roundtrip_value);
         }
 
