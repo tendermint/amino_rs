@@ -1,7 +1,7 @@
 [package]
 name = "prost-types"
 # NB: When modifying, also modify html_root_url in lib.rs
-version = "0.4.0"
+version = "0.5.0"
 authors = ["Dan Burkert <dan@danburkert.com>"]
 license = "Apache-2.0"
 repository = "https://github.com/danburkert/prost"
@@ -15,5 +15,5 @@ test = false
 
 [dependencies]
 bytes = "0.5"
-prost-amino = { version = "0.4.0", path = ".." }
-prost-amino-derive = { version = "0.4.0", path = "../prost-amino-derive" }
+prost-amino = { version = "0.5.0", path = ".." }
+prost-amino-derive = { version = "0.5.0", path = "../prost-amino-derive" }

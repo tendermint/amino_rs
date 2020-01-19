@@ -1,8 +1,8 @@
 [package]
 name = "prost-amino"
 # NB: When modifying, also modify html_root_url in lib.rs
-version = "0.4.1"
-authors = ["Dan Burkert <dan@danburkert.com>", "zaki <zaki@tendermint.com>", "Ismail Khoffi <ismail.khoffi@gmail.com"]
+version = "0.5.0"
+authors = ["Dan Burkert <dan@danburkert.com>", "zaki <zaki@tendermint.com>", "Ismail Khoffi <ismail.khoffi@gmail.com>"]
 license = "Apache-2.0"
 repository = "https://github.com/tendermint/amino_rs"
 documentation = "https://docs.rs/prost"
@@ -34,5 +34,5 @@ bytes = "0.5"
 [dev-dependencies]
 env_logger = { version = "0.5", default-features = false }
 log = "0.4"
-prost-amino-derive = { version = "0.4.1", path = "prost-amino-derive" }
+prost-amino-derive = { version = "0.5.0", path = "prost-amino-derive" }
 quickcheck = "0.6"
