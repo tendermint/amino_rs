@@ -20,8 +20,8 @@ fn main() {
     let protobuf_dir = out_dir.join(format!("protobuf-{}", VERSION));
 
     if !protobuf_dir.exists() {
-        let tempdir = TempDir::new_in(&out_dir, "protobuf")
-                              .expect("failed to create temporary directory");
+        let tempdir =
+            TempDir::new_in(&out_dir, "protobuf").expect("failed to create temporary directory");
 
         // Download the protobuf source tarball.
         download_protobuf(tempdir.path());
@@ -31,65 +31,74 @@ fn main() {
 
         // Build and install protoc, the protobuf libraries, and the conformance test runner.
         let rc = Command::new("./autogen.sh")
-                        .current_dir(&src_dir)
-                        .status()
-                        .expect("failed to execute autogen.sh");
+            .current_dir(&src_dir)
+            .status()
+            .expect("failed to execute autogen.sh");
         assert!(rc.success(), "protobuf autogen.sh failed");
 
         let num_jobs = env::var("NUM_JOBS").expect("NUM_JOBS environment variable not set");
 
         let rc = Command::new("./configure")
-                        .arg("--disable-shared")
-                        .arg("--prefix").arg(&prefix_dir)
-                        .current_dir(&src_dir)
-                        .status()
-                        .expect("failed to execute configure");
+            .arg("--disable-shared")
+            .arg("--prefix")
+            .arg(&prefix_dir)
+            .current_dir(&src_dir)
+            .status()
+            .expect("failed to execute configure");
         assert!(rc.success(), "failed to configure protobuf");
 
         let rc = Command::new("make")
-                        .arg("-j").arg(&num_jobs)
-                        .arg("install")
-                        .current_dir(&src_dir)
-                        .status()
-                        .expect("failed to execute make protobuf");
+            .arg("-j")
+            .arg(&num_jobs)
+            .arg("install")
+            .current_dir(&src_dir)
+            .status()
+            .expect("failed to execute make protobuf");
         assert!(rc.success(), "failed to make protobuf");
 
         let rc = Command::new("make")
-                        .arg("-j").arg(&num_jobs)
-                        .arg("install")
-                        .current_dir(src_dir.join("conformance"))
-                        .status()
-                        .expect("failed to execute make conformance");
+            .arg("-j")
+            .arg(&num_jobs)
+            .arg("install")
+            .current_dir(src_dir.join("conformance"))
+            .status()
+            .expect("failed to execute make conformance");
         assert!(rc.success(), "failed to make protobuf");
 
         // Copy .protos and data into the install directory.
         fs::create_dir(prefix_dir.join("share")).expect("failed to create share directory");
         fs::create_dir(prefix_dir.join("include").join("benchmarks"))
-           .expect("failed to create benchmarks include directory");
+            .expect("failed to create benchmarks include directory");
         fs::create_dir(prefix_dir.join("include").join("conformance"))
-           .expect("failed to create conformance include directory");
+            .expect("failed to create conformance include directory");
 
         for proto in &[
             "benchmarks/benchmark_messages_proto2.proto",
             "benchmarks/benchmark_messages_proto3.proto",
-            "conformance/conformance.proto"
+            "conformance/conformance.proto",
         ] {
             fs::rename(src_dir.join(proto), prefix_dir.join("include").join(proto))
-               .expect(&format!("failed to move {}", proto));
+                .expect(&format!("failed to move {}", proto));
         }
         for proto in &[
             "google/protobuf/test_messages_proto2.proto",
             "google/protobuf/test_messages_proto3.proto",
             "google/protobuf/unittest.proto",
             "google/protobuf/unittest_import.proto",
-            "google/protobuf/unittest_import_public.proto"
+            "google/protobuf/unittest_import_public.proto",
         ] {
-            fs::rename(src_dir.join("src").join(proto), prefix_dir.join("include").join(proto))
-               .expect(&format!("failed to move {}", proto));
+            fs::rename(
+                src_dir.join("src").join(proto),
+                prefix_dir.join("include").join(proto),
+            )
+            .expect(&format!("failed to move {}", proto));
         }
 
         for dat in &["google_message1.dat", "google_message2.dat"] {
-            fs::rename(src_dir.join("benchmarks").join(dat), prefix_dir.join("share").join(dat))
+            fs::rename(
+                src_dir.join("benchmarks").join(dat),
+                prefix_dir.join("share").join(dat),
+            )
             .expect(&format!("failed to move {}", dat));
         }
 
@@ -105,19 +114,27 @@ fn download_protobuf(out_dir: &Path) {
     let mut data = Vec::new();
     let mut handle = Easy::new();
 
-    handle.url(&format!("https://github.com/google/protobuf/archive/v{}.tar.gz", VERSION))
-          .expect("failed to configure protobuf tarball URL");
-    handle.follow_location(true)
-          .expect("failed to configure follow location");
+    handle
+        .url(&format!(
+            "https://github.com/google/protobuf/archive/v{}.tar.gz",
+            VERSION
+        ))
+        .expect("failed to configure protobuf tarball URL");
+    handle
+        .follow_location(true)
+        .expect("failed to configure follow location");
     {
         let mut transfer = handle.transfer();
-        transfer.write_function(|new_data| {
-            data.extend_from_slice(new_data);
-            Ok(new_data.len())
-        }).expect("failed to write download data");
+        transfer
+            .write_function(|new_data| {
+                data.extend_from_slice(new_data);
+                Ok(new_data.len())
+            })
+            .expect("failed to write download data");
         transfer.perform().expect("failed to download protobuf");
     }
 
     Archive::new(GzDecoder::new(Cursor::new(data)))
-            .unpack(out_dir).expect("failed to unpack protobuf tarball");
+        .unpack(out_dir)
+        .expect("failed to unpack protobuf tarball");
 }
