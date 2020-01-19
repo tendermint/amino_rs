@@ -271,7 +271,7 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
 
                 #[allow(unused_variables)]
                 fn merge_field<B>(&mut self, buf: &mut B) -> ::std::result::Result<(), _prost::DecodeError>
-                where B: _prost::bytes::BufMut {
+                where B: _prost::bytes::Buf {
                     #struct_name
                     if #is_registered {
                         // skip some bytes: varint(total_len) || prefix_bytes
