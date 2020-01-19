@@ -96,13 +96,13 @@ impl Field {
             },
             Label::Required => quote! {
                 let pre = vec![#(#amino_prefix),*];
-                buf.put(pre);
+                buf.put(pre.as_ref());
                 _prost::encoding::message::encode(#tag, &#ident, buf);
             },
             Label::Repeated => quote! {
                 for msg in &#ident {
                     let pre = vec![#(#amino_prefix),*];
-                    buf.put(pre);
+                    buf.put(pre.as_ref());
                     _prost::encoding::message::encode(#tag, msg, buf);
                 }
             },

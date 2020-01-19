@@ -89,7 +89,7 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
             quote! {
                 // add prefix bytes for registered types:
                 let pre = vec![#(#p),*];
-                buf.put(pre);
+                buf.put(pre.as_ref());
             }
         }
         None => quote!(),

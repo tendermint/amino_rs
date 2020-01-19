@@ -8,7 +8,7 @@ use std::str;
 use std::u32;
 use std::usize;
 
-use bytes::{buf::ext::BufExt, Buf, BufMut};
+use bytes::{Buf, BufMut};
 
 use DecodeError;
 use Message;
