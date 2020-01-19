@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/prost/0.4.0")]
+#![doc(html_root_url = "https://docs.rs/prost_amino/0.4.1")]
 
 pub extern crate bytes;
 
