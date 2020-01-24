@@ -580,11 +580,16 @@ pub fn oneof(input: TokenStream) -> TokenStream {
     try_oneof(input).unwrap()
 }
 
+/// Compute the Amino disfix (prefix and disambiguation bytes)
+/// for the given registered type name.
+/// Note: Disambiguation bytes are only used in tests to guarantee parity
+/// with go-amino. Hence this method is not public.
 fn compute_disfix(identity: &str) -> (Vec<u8>, Vec<u8>) {
     let mut sh = Sha256::default();
     sh.input(identity.as_bytes());
     let output = sh.result();
 
+    // https://github.com/tendermint/go-amino/blob/master/README.md#computing-the-prefix-and-disambiguation-bytes
     let disamb_bytes = output
         .iter()
         .filter(|&x| *x != 0x00)
@@ -592,15 +597,29 @@ fn compute_disfix(identity: &str) -> (Vec<u8>, Vec<u8>) {
         .take(3)
         .collect();
 
-    let prefix_bytes: Vec<u8> = output
+    let prefix_bytes = prefixify_bytes(output.as_ref());
+    return (disamb_bytes, prefix_bytes);
+}
+
+/// Compute the Amino prefix for the given registered type name.
+pub fn compute_prefix(name: &str) -> Vec<u8> {
+    let mut sh = Sha256::default();
+    sh.input(name.as_bytes());
+    let output = sh.result();
+
+    prefixify_bytes(output.as_ref())
+}
+
+fn prefixify_bytes(sha2_out: &[u8]) -> Vec<u8> {
+    // https://github.com/tendermint/go-amino/blob/master/README.md#computing-the-prefix-and-disambiguation-bytes
+    sha2_out
         .iter()
         .filter(|&x| *x != 0x00)
         .skip(3)
         .filter(|&x| *x != 0x00)
         .cloned()
         .take(4)
-        .collect();
-    return (disamb_bytes, prefix_bytes);
+        .collect()
 }
 
 #[cfg(test)]

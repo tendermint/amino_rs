@@ -66,7 +66,7 @@ where
         buf.advance(1);
         Ok(u64::from(byte))
     } else if len > 10 || bytes[len - 1] < 0x80 {
-        let (value, advance) =  decode_varint_slice(bytes)?;
+        let (value, advance) = decode_varint_slice(bytes)?;
         buf.advance(advance);
         Ok(value)
     } else {
@@ -1279,7 +1279,8 @@ mod test {
             let roundtrip_value = decode_varint(&mut encoded.clone()).expect("decoding failed");
             assert_eq!(value, roundtrip_value);
 
-            let roundtrip_value = decode_varint_slow(&mut encoded.clone()).expect("slow decoding failed");
+            let roundtrip_value =
+                decode_varint_slow(&mut encoded.clone()).expect("slow decoding failed");
             assert_eq!(value, roundtrip_value);
         }
 

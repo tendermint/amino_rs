@@ -5,9 +5,9 @@ extern crate tempdir;
 
 use std::env;
 use std::fs;
+use std::io::Cursor;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::io::Cursor;
 
 use curl::easy::Easy;
 use flate2::bufread::GzDecoder;
