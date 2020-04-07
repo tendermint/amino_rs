@@ -178,7 +178,7 @@ impl Field {
             Kind::Plain(..) | Kind::Optional(..) | Kind::Required(..) => quote!(merge),
             Kind::Repeated | Kind::Packed => quote!(merge_repeated),
         };
-        let is_registered = self.amino_prefix.len() > 0;
+        let is_registered = !self.amino_prefix.is_empty();
         let decode_with_prefix = is_registered && module.to_string() == "bytes";
         let merge_fn = if decode_with_prefix {
             quote!(_prost::encoding::#module::merge_with_prefix)

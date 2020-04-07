@@ -6,7 +6,8 @@ use bytes::{Buf, BufMut};
 use DecodeError;
 use EncodeError;
 
-use crate::encoding::{encode_varint, encoded_len_varint, message, WireType};
+use crate::encoding::{encode_varint, encoded_len_varint, decode_varint, message, WireType};
+
 /// A Protocol Buffers message.
 pub trait Message: Debug + Send + Sync {
     /// Encodes the message to a buffer.
@@ -101,7 +102,13 @@ pub trait Message: Debug + Send + Sync {
         Self: Sized,
     {
         let mut buf = buf;
+        let mut skipped_once = false;
         while buf.has_remaining() {
+            if self.is_amino_registered() && !skipped_once{
+                let _full_len = decode_varint(&mut buf)?;
+                buf.advance(4);
+                skipped_once = true;
+            }
             self.merge_field(&mut buf)?;
         }
         Ok(())
@@ -119,6 +126,10 @@ pub trait Message: Debug + Send + Sync {
 
     /// Clears the message, resetting all fields to their default.
     fn clear(&mut self);
+
+    fn is_amino_registered(&self) -> bool {
+        false
+    }
 }
 
 impl<M> Message for Box<M>
@@ -142,5 +153,8 @@ where
     }
     fn clear(&mut self) {
         (**self).clear()
+    }
+    fn is_amino_registered(&self) -> bool {
+        (**self).is_amino_registered()
     }
 }

@@ -39,7 +39,7 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
     if amino_name_attrs.len() > 1 {
         bail!("got more than one registered amino_name");
     }
-    let is_registered = amino_name_attrs.len() == 1;
+    let is_message_registered = amino_name_attrs.len() == 1;
     // TODO(ismail): move this into separate function!
     let amino_name: Option<String> = {
         match amino_name_attrs.first() {
@@ -257,7 +257,7 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
             impl _prost::Message for #ident {
                 #[allow(unused_variables)]
                 fn encode_raw<B>(&self, buf: &mut B) where B: _prost::bytes::BufMut  {
-                    if #is_registered {
+                    if #is_message_registered {
                         // TODO: in go-amino this only get length-prefixed if MarhsalBinary is used
                         // opposed to MarshalBinaryBare
                         let len = 4 #(+ #encoded_len2)*;
@@ -270,15 +270,14 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
                 }
 
                 #[allow(unused_variables)]
+                fn is_amino_registered(&self) -> bool {
+                    #is_message_registered
+                }
+
+                #[allow(unused_variables)]
                 fn merge_field<B>(&mut self, buf: &mut B) -> ::std::result::Result<(), _prost::DecodeError>
                 where B: _prost::bytes::Buf {
                     #struct_name
-                    if #is_registered {
-                        // skip some bytes: varint(total_len) || prefix_bytes
-                        // prefix (4) + total_encoded_len:
-                        let _full_len = _prost::encoding::decode_varint(buf)?;
-                        buf.advance(4);
-                    }
                     if buf.remaining() > 0 {
                         let (tag, wire_type) = _prost::encoding::decode_key(buf)?;
                         match tag {
@@ -294,7 +293,7 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
                 #[inline]
                 fn encoded_len(&self) -> usize {
                     let len = 0 #(+ #encoded_len)*;
-                    if #is_registered {
+                    if #is_message_registered {
                         4 + len
                     } else {
                         len

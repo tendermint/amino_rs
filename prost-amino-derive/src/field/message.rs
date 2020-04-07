@@ -110,18 +110,40 @@ impl Field {
     }
 
     pub fn merge(&self, ident: TokenStream) -> TokenStream {
-        match self.label {
-            Label::Optional => quote! {
+        let is_amino_prefixed  = !self.amino_prefix.is_empty();
+        let prefix = &self.amino_prefix;
+        if is_amino_prefixed {
+            match self.label {
+                Label::Optional => quote! {
+                {
+                buf.advance(4);
+                _prost::encoding::message::merge(wire_type,
+                                                 #ident.get_or_insert_with(Default::default),
+                                                 buf)}
+            },
+                Label::Required => quote! {{
+                buf.advance(4);
+                _prost::encoding::message::merge(wire_type, &mut #ident, buf)}
+            },
+                Label::Repeated => quote! {{
+                buf.advance(4);
+                _prost::encoding::message::merge_repeated(wire_type, &mut #ident, buf)}
+            },
+            }
+        } else {
+            match self.label {
+                Label::Optional => quote! {
                 _prost::encoding::message::merge(wire_type,
                                                  #ident.get_or_insert_with(Default::default),
                                                  buf)
             },
-            Label::Required => quote! {
+                Label::Required => quote! {
                 _prost::encoding::message::merge(wire_type, &mut #ident, buf)
             },
-            Label::Repeated => quote! {
+                Label::Repeated => quote! {
                 _prost::encoding::message::merge_repeated(wire_type, &mut #ident, buf)
             },
+            }
         }
     }
 
