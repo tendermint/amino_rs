@@ -257,14 +257,14 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
             impl _prost::Message for #ident {
                 #[allow(unused_variables)]
                 fn encode_raw<B>(&self, buf: &mut B) where B: _prost::bytes::BufMut  {
-                    if #is_registered {
+                    /*if #is_registered {
                         // TODO: in go-amino this only get length-prefixed if MarhsalBinary is used
                         // opposed to MarshalBinaryBare
                         let len = 4 #(+ #encoded_len2)*;
                         _prost::encoding::encode_varint(len as u64, buf);
                     } else {
                         // not length prefixed!
-                    }
+                    }*/
                     #comp_prefix
                     #(#encode)*
                 }
