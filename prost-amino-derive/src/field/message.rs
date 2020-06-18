@@ -1,5 +1,6 @@
 use failure::Error;
 use proc_macro2::TokenStream;
+use quote::ToTokens;
 use syn::Meta;
 
 use field::{amino_name_attr, set_bool, set_option, tag_attr, word_attr, Label};
@@ -76,7 +77,10 @@ impl Field {
     pub fn new_oneof(attrs: &[Meta]) -> Result<Option<Field>, Error> {
         if let Some(mut field) = Field::new(attrs, None)? {
             if let Some(attr) = attrs.iter().find(|attr| Label::from_attr(attr).is_some()) {
-                bail!("invalid attribute for oneof field: {}", attr.name());
+                bail!(
+                    "invalid attribute for oneof field: {}",
+                    attr.path().into_token_stream()
+                );
             }
             field.label = Label::Required;
             Ok(Some(field))
@@ -91,19 +95,19 @@ impl Field {
         match self.label {
             Label::Optional => quote! {
                 if let Some(ref msg) = #ident {
-                    _prost::encoding::message::encode(#tag, msg, buf);
+                    ::prost::encoding::message::encode(#tag, msg, buf);
                 }
             },
             Label::Required => quote! {
                 let pre = vec![#(#amino_prefix),*];
                 buf.put(pre.as_ref());
-                _prost::encoding::message::encode(#tag, &#ident, buf);
+                ::prost::encoding::message::encode(#tag, &#ident, buf);
             },
             Label::Repeated => quote! {
                 for msg in &#ident {
                     let pre = vec![#(#amino_prefix),*];
                     buf.put(pre.as_ref());
-                    _prost::encoding::message::encode(#tag, msg, buf);
+                    ::prost::encoding::message::encode(#tag, msg, buf);
                 }
             },
         }
