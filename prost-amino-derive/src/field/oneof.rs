@@ -17,7 +17,7 @@ impl Field {
         let mut unknown_attrs = Vec::new();
 
         for attr in attrs {
-            if attr.name() == "oneof" {
+            if attr.path().is_ident("oneof") {
                 let t = match *attr {
                     Meta::NameValue(MetaNameValue {
                         lit: Lit::Str(ref lit),
@@ -25,8 +25,12 @@ impl Field {
                     }) => parse_str::<Path>(&lit.value())?,
                     Meta::List(ref list) if list.nested.len() == 1 => {
                         // TODO(rustlang/rust#23121): slice pattern matching would make this much nicer.
-                        if let NestedMeta::Meta(Meta::Word(ref ident)) = list.nested[0] {
-                            Path::from(ident.clone())
+                        if let NestedMeta::Meta(Meta::Path(ref path)) = list.nested[0] {
+                            if let Some(ident) = path.get_ident() {
+                                Path::from(ident.clone())
+                            } else {
+                                bail!("invalid oneof attribute: item must be an identifier");
+                            }
                         } else {
                             bail!("invalid oneof attribute: item must be an identifier");
                         }
@@ -60,7 +64,7 @@ impl Field {
             None => bail!("oneof field is missing a tags attribute"),
         };
 
-        Ok(Some(Field { ty: ty, tags: tags }))
+        Ok(Some(Field { ty, tags }))
     }
 
     /// Returns a statement which encodes the oneof field.

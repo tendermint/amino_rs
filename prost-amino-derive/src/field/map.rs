@@ -53,11 +53,14 @@ impl Field {
         for attr in attrs {
             if let Some(t) = tag_attr(attr)? {
                 set_option(&mut tag, t, "duplicate tag attributes")?;
-            } else if let Some(map_ty) = MapTy::from_str(&attr.name().to_string()) {
-                let (k, v): (String, String) = match *attr {
+            } else if let Some(map_ty) = attr
+                .path()
+                .get_ident()
+                .and_then(|i| MapTy::from_str(&i.to_string()))
+            {
+                let (k, v): (String, String) = match &*attr {
                     Meta::NameValue(MetaNameValue {
-                        lit: Lit::Str(ref lit),
-                        ..
+                        lit: Lit::Str(lit), ..
                     }) => {
                         let items = lit.value();
                         let mut items = items.split(',').map(ToString::to_string);
@@ -71,17 +74,21 @@ impl Field {
                         }
                         (k, v)
                     }
-                    Meta::List(ref meta_list) => {
+                    Meta::List(meta_list) => {
                         // TODO(rustlang/rust#23121): slice pattern matching would make this much nicer.
                         if meta_list.nested.len() != 2 {
                             bail!("invalid map attribute: must contain key and value types");
                         }
                         let k = match &meta_list.nested[0] {
-                            &NestedMeta::Meta(Meta::Word(ref k)) => k.to_string(),
+                            NestedMeta::Meta(Meta::Path(k)) if k.get_ident().is_some() => {
+                                k.get_ident().unwrap().to_string()
+                            }
                             _ => bail!("invalid map attribute: key must be an identifier"),
                         };
                         let v = match &meta_list.nested[1] {
-                            &NestedMeta::Meta(Meta::Word(ref v)) => v.to_string(),
+                            NestedMeta::Meta(Meta::Path(v)) if v.get_ident().is_some() => {
+                                v.get_ident().unwrap().to_string()
+                            }
                             _ => bail!("invalid map attribute: value must be an identifier"),
                         };
                         (k, v)
@@ -99,11 +106,11 @@ impl Field {
         }
 
         Ok(match (types, tag.or(inferred_tag)) {
-            (Some((map_ty, key_ty, val_ty)), Some(tag)) => Some(Field {
-                map_ty: map_ty,
-                key_ty: key_ty,
-                value_ty: val_ty,
-                tag: tag,
+            (Some((map_ty, key_ty, value_ty)), Some(tag)) => Some(Field {
+                map_ty,
+                key_ty,
+                value_ty,
+                tag,
             }),
             _ => None,
         })

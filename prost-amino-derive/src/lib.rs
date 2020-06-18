@@ -34,7 +34,7 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
     let top_level_attrs: Vec<syn::Attribute> = input.attrs;
     let amino_name_attrs: Vec<syn::Attribute> = top_level_attrs
         .into_iter()
-        .filter(|a| a.path.segments.first().unwrap().value().ident == "amino_name")
+        .filter(|a| a.path.is_ident("amino_name"))
         .collect();
     if amino_name_attrs.len() > 1 {
         bail!("got more than one registered amino_name");
@@ -44,7 +44,7 @@ fn try_message(input: TokenStream) -> Result<TokenStream, Error> {
     let amino_name: Option<String> = {
         match amino_name_attrs.first() {
             Some(att) => {
-                let tts = att.tts.clone().into_iter().collect::<Vec<_>>();
+                let tts = att.tokens.clone().into_iter().collect::<Vec<_>>();
                 // for example:
                 //                [
                 //                    Punct {
@@ -582,8 +582,8 @@ pub fn oneof(input: TokenStream) -> TokenStream {
 
 fn compute_disfix(identity: &str) -> (Vec<u8>, Vec<u8>) {
     let mut sh = Sha256::default();
-    sh.input(identity.as_bytes());
-    let output = sh.result();
+    sh.update(identity.as_bytes());
+    let output = sh.finalize();
 
     let disamb_bytes = output
         .iter()
@@ -606,10 +606,6 @@ fn compute_disfix(identity: &str) -> (Vec<u8>, Vec<u8>) {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    use std::fmt;
-
-    use std::error;
 
     #[test]
     fn compare_to_go_amino() {
